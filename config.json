@@ -1,0 +1,16 @@
+{
+    "clusters":[
+        {"name":"<Friendly name of the Qumulo Cluster>", 
+        "sqlite_db_path":"<Full path of the SQLITE db to be created>", 
+        "csv_data_path":"<Full path of the location to save the CSVs oof Qumulo API data>",
+        "hostname":"<Hostname of Qumulo storage cluster>",
+        "api_username":"<API user name for Qumulo storage cluster>",
+        "api_password":"<API password for Qumulo storage cluster>"
+        }
+    ],
+    "email_account":{
+        "account_type":"gmail",
+        "from_email":"<gmail or google apps email address>",
+        "from_password":"<gmail or google apps password>"
+    }
+}
