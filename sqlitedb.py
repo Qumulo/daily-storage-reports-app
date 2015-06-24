@@ -163,8 +163,9 @@ class SqliteDb(object):
                 self.cn_c.execute(table["create_sql"] % {"table_name":table["name"]})
                 self.cn.commit()
             except sqlite3.OperationalError:
-                print "Table alread exists: " + table["name"]
-
+                # Table already exists
+                pass
+ 
 
     def get_schemas(self):
         for table in self.tables:
