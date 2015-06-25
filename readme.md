@@ -14,11 +14,11 @@
 
 ## Installation Steps
 
-### 1. Install the daily\_storage\_reports
+### 1. Install the daily_storage_reports
 ```shell
-git clone git@github.com:Qumulo/daily\_storage\_reports.git
+git clone git@github.com:Qumulo/daily_storage_reports.git
 ```
-Or, download the zip file (https://github.com/Qumulo/daily\_storage\_reports/archive/initial_checkin.zip) and unzip it to your machine where you will be running this tool.
+Or, download the zip file (https://github.com/Qumulo/daily_storage_reports/archive/initial_checkin.zip) and unzip it to your machine where you will be running this tool.
 
 ### 2. Install Prequisites
 
@@ -52,6 +52,9 @@ Edit *config.json*
 ### 5. Setup crontab
 Setup crontab
 Run *setup-crontab.sh* on the command line to install the scheduled data pulls in your crontab.
+```shell
+./setup-crontab.sh
+```
 
 ### 6. Run the web app
 ```shell
