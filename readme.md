@@ -1,6 +1,8 @@
+# Daily Storage Reports Readme
+
 ## Requirements
 
-* Qumulo cluster with API credentials
+* Qumulo cluster and API credentials for the cluster
 * Linux or Mac with continuous access to the Qumulo cluster
 * cron
 * sqlite3
@@ -10,18 +12,26 @@
 * Email smtp server or google apps credentials
 
 
-## Installation
+## Installation Steps
 
-First, set up the required libraries on your Linux or Mac system.
+### 1. Install the daily\_storage\_reports
+```shell
+git clone git@github.com:Qumulo/daily\_storage\_reports.git
+```
+Or, download the zip file (https://github.com/Qumulo/daily\_storage\_reports/archive/initial_checkin.zip) and unzip it to your machine where you will be running this tool.
 
-### Linux, Ubuntu
+### 2. Install Prequisites
+
+We currently support Linux or MacOSX for running the Daily Storage Reports.
+
+#### On Linux (Ubuntu)
 ```shell
 sudo apt-get install python-pip sqlite3
 pip install Flask
 pip install argparse
 ```
 
-### Mac OSX
+#### On Mac OSX
 ```shell
 sudo brew install python
 sudo brew install sqlite3
@@ -29,13 +39,21 @@ pip install Flask
 pip install argparse
 ```
 
-### Set up the configuration file
+### 3. Install the Qumulo API python library
+```shell
+pip install qumulo_api
+```
+
+### 4. Set up the configuration file
 Edit *config.json*
 1. Add your Qumulo cluster information and credentials
 2. Edit your email credentials/server
 
+### 5. Setup crontab
 Setup crontab
 Run *setup-crontab.sh* on the command line to install the scheduled data pulls in your crontab.
 
-## Running the web app
-```python app.py --op server```
+### 6. Run the web app
+```shell
+python app.py --op server
+```

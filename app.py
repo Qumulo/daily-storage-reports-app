@@ -109,12 +109,12 @@ def send_email():
                             stdin=subprocess.PIPE)
     out,err = p.communicate()
 
-    username = config["email_account"]["from_email"]
+    username = config["email_account"]["account_username"]
+    password = config["email_account"]["account_password"]
     fromaddr = config["email_account"]["from_email"]
     toaddrs  = flask.request.args.get('to', '').replace(" ", "").split(",")
     text = "Here's the latest storage report for your Qumulo cluster."
     subject = "Qumulo Cluster: itstor Storage Report"
-    password = config["email_account"]["from_password"]
     pdf_name = "qumulo-storage-report.pdf"
     html_message = text
     msg = MIMEMultipart()
@@ -144,7 +144,10 @@ def send_email():
         attachFile.add_header('Content-Disposition', 'attachment', filename=os.path.basename(pdf_name))
         msg.attach(attachFile)
 
-    smtp = smtplib.SMTP_SSL('smtp.gmail.com:465')
+    if ":465" in config["email_account"]["server"]:
+        smtp = smtplib.SMTP_SSL(config["email_account"]["server"])
+    else:
+        smtp = smtplib.SMTP(config["email_account"]["server"])
     smtp.ehlo()
     smtp.login(username,password)
     smtp.sendmail(fromaddr, toaddrs, msg.as_string())

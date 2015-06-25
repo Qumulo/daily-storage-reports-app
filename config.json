@@ -9,8 +9,9 @@
         }
     ],
     "email_account":{
-        "account_type":"gmail",
-        "from_email":"<gmail or google apps email address>",
-        "from_password":"<gmail or google apps password>"
+        "server":"<smtp server and port, if necessary>",
+        "from_email":"<from email address>",
+        "account_username":"<smtp user name (or gmail email address)>",
+        "account_password":"<smtp password (or gmail password)>"
     }
 }
