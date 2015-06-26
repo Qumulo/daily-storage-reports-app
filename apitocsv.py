@@ -183,44 +183,43 @@ class ApiToCsv:
         all_iops = {}
         total_iops = 0
         for iop in res['entries']:
-            for k, v in iop.iteritems():
-                if iop["type"] not in iops_types:
-                    continue
+            if iop["type"] not in iops_types:
+                continue
 
-                if iop['ip'] not in ip_iops:
+            if iop['ip'] not in ip_iops:
+                data = OrderedDict()
+                data['timestamp'] = self.timestamp
+                data['ip'] = iop['ip']
+                data['total'] = 0
+                for iops_type in iops_types.values():
+                    data[iops_type] = 0
+                ip_iops[iop['ip']] = data
+            ip_iops[iop['ip']]['total'] += iop['rate']
+            ip_iops[iop['ip']][iops_types[iop["type"]]] += iop['rate']
+                
+
+            path_parts = string.split(id_paths[iop['id']], '/')
+
+            for ppi in range(1,len(path_parts)):
+                if ppi == 1:
+                    the_path = '/'
+                else:
+                    the_path = '/'.join(path_parts[0:ppi])
+
+                if the_path not in all_iops:
                     data = OrderedDict()
                     data['timestamp'] = self.timestamp
-                    data['ip'] = iop['ip']
+                    data['level'] = ppi - 1
+                    data['path'] = the_path
                     data['total'] = 0
                     for iops_type in iops_types.values():
                         data[iops_type] = 0
-                    ip_iops[iop['ip']] = data
-                ip_iops[iop['ip']]['total'] += iop['rate']
-                ip_iops[iop['ip']][iops_types[iop["type"]]] += iop['rate']
-                    
+                    all_iops[the_path] = data
 
-                path_parts = string.split(id_paths[iop['id']], '/')
+                all_iops[the_path]['total'] += iop['rate']
+                all_iops[the_path][iops_types[iop["type"]]] += iop['rate']
 
-                for ppi in range(1,len(path_parts)):
-                    if ppi == 1:
-                        the_path = '/'
-                    else:
-                        the_path = '/'.join(path_parts[0:ppi])
-
-                    if the_path not in all_iops:
-                        data = OrderedDict()
-                        data['timestamp'] = self.timestamp
-                        data['level'] = ppi - 1
-                        data['path'] = the_path
-                        data['total'] = 0
-                        for iops_type in iops_types.values():
-                            data[iops_type] = 0
-                        all_iops[the_path] = data
-
-                    all_iops[the_path]['total'] += iop['rate']
-                    all_iops[the_path][iops_types[iop["type"]]] += iop['rate']
-
-                total_iops += iop['rate']
+            total_iops += iop['rate']
 
         for k, v in all_iops.iteritems():
             if v['total'] > total_iops * 0.01:
