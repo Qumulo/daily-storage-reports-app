@@ -18,7 +18,7 @@
 ```shell
 git clone git@github.com:Qumulo/daily_storage_reports.git
 ```
-Or, download the zip file (https://github.com/Qumulo/daily_storage_reports/archive/initial_checkin.zip) and unzip it to your machine where you will be running this tool.
+Or, download the zip file (https://github.com/Qumulo/daily_storage_reports/archive/master.zip) and unzip it to your machine where you will be running this tool.
 
 ### 2. Install Prequisites
 
@@ -26,36 +26,28 @@ We currently support Linux or MacOSX for running the Daily Storage Reports.
 
 #### On Linux (Ubuntu)
 ```shell
-sudo apt-get install python-pip sqlite3
-pip install Flask
-pip install argparse
-pip install python-dateutil
+sudo apt-get install python-pip sqlite3 phantomjs
 ```
 
 #### On Mac OSX
 ```shell
-sudo brew install python
-sudo brew install sqlite3
-pip install Flask
-pip install argparse
-pip install python-dateutil
+brew install python sqlite3 phantomjs
 ```
 
-### 3. Install the Qumulo API python library
+### 3. Install the prerequisite python libraries
 ```shell
-pip install qumulo_api
+pip install -r requirements.txt
 ```
 
 ### 4. Set up the configuration file
 Edit *config.json*
-1. Add your Qumulo cluster information and credentials
-2. Edit your email credentials/server
+1. Add your Qumulo cluster information and credentials as well as the email credentials/server. There are descriptions of all required properties. There is also an example
 
-### 5. Setup crontab
+### 5. Setup crontab and the intitial data
 Setup crontab
 Run *setup-crontab.sh* on the command line to install the scheduled data pulls in your crontab.
 ```shell
-./setup-crontab.sh
+./setup-daily-reports.sh
 ```
 
 ### 6. Run the web app

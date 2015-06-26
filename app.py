@@ -111,7 +111,7 @@ def send_email():
 
     username = config["email_account"]["account_username"]
     password = config["email_account"]["account_password"]
-    fromaddr = config["email_account"]["from_email"]
+    fromaddr = config["email_account"]["from_email_address"]
     toaddrs  = flask.request.args.get('to', '').replace(" ", "").split(",")
     text = "Here's the latest storage report for your Qumulo cluster."
     subject = "Qumulo Cluster: itstor Storage Report"
