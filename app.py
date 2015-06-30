@@ -198,6 +198,7 @@ def show_index():
                             , cluster_num=cluster_num
                             , body=body_content
                             , phantom=phantom
+                            , request_url=flask.request.url
                             , title="Qumulo Storage Status Report")
 
 

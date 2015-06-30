@@ -57,7 +57,7 @@ python app.py --op server
 
 ## About the reports in the web app
 
-Once you've launched the web app via step 6 above, you'll have access to the reports interface. It will be located at the URL: http://localhost:8080/
+Once you've launched the web app via step 6 above, you'll have access to the reports interface. If you're running from your local machine, the reports will be located at the URL: http://localhost:8080/ otherwise, replace localhost with the full hostname where you are running the app.
 
 ### Menu
 
@@ -83,6 +83,6 @@ View the cluster (or filtered path) average daily file read and write IOPS over 
 This table shows a detiled breakdown of path metrics for the cluster or filtered path.
 * Level - The level of the directory with zero being the root (/) directory
 * Path - The directory path on the cluster
-* Capacity - The capacity used by the directory and its children for the last date of the report.
+* Capacity - The capacity used by the directory and its children for the last date of the report. If the capacity column shows "[Deleted]", there is a chance the directory exists, but that it is now smaller than the minimum capacity (0.05% of total used capacity) for tracking over time.
 * Capacity Change - The change in used capacity for the directory and its children between the first and last date of the report.
 * IOPS - The average IOPS for the directory and its children during the date range of the report.

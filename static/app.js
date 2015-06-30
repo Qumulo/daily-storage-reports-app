@@ -81,8 +81,9 @@ function render_capacity(config, args){
         highlight_data[0] += " (" + (100 * last_val / total_cap).toFixed(1) + "%)";
         highlight_data[0] += "<br />of " + nice_bytes( total_cap );
         $("#capacity + .stats").append(draw_highlight("Used Capacity", highlight_data));
-
-        var one_week = last_val - d[d.length - 7].total_used_capacity;
+        var one_week = null;
+        if(d.length >= 7)
+            one_week = last_val - d[d.length - 7].total_used_capacity;
         var full_range = (last_val - first_val) / (d.length / 7.0);
         var growth_data = ["Last Week: <b>" + (one_week>0?"+":"") + nice_bytes(one_week) + "</b>"];
         growth_data.push("Last " + Math.ceil(d.length / 7) + " Weeks: <b>" + (full_range>0?"+":"") + nice_bytes(full_range) + "</b>");
@@ -156,6 +157,9 @@ function render_iops(config, args){
         config["data"]["keys"]["x"] = "timestamp";
         config["data"]["keys"]["value"] = ["avg_iops"];
         config["data"]["names"]["avg_iops"] = 'Average IOPS';
+        config["tooltip"]["format"]["value"] = function (value, ratio, id) {
+                                                return value.toLocaleString();
+                                                };
         var first_date = moment(d[0].timestamp);
         var last_date = moment(d[d.length - 1].timestamp);
         config["axis"]["x"]["min"] = first_date.add(-1, "days").format("YYYY-MM-DD");
@@ -179,13 +183,13 @@ function render_file_iops(config, args){
         config["data"]["keys"]["value"] = ["avg_file_write_iops", "avg_file_read_iops"];
         config["data"]["names"]["avg_file_write_iops"] = 'File Writes';
         config["data"]["names"]["avg_file_read_iops"] = 'File Reads';
-
         config["data"]["colors"] = {
             avg_file_write_iops: '#ff9933',
             avg_file_read_iops: '#009999'
           };
-
-
+        config["tooltip"]["format"]["value"] = function (value, ratio, id) {
+                                                return value.toLocaleString();
+                                                };
         var first_date = moment(d[0].timestamp);
         var last_date = moment(d[d.length - 1].timestamp);
         config["axis"]["x"]["min"] = first_date.add(-1, "days").format("YYYY-MM-DD");
@@ -243,7 +247,7 @@ function render_path_stats(){
                 { "title": "Path", "data":"path", "defaultContent":"", "className":"path_link" },
                 { "title": "Capacity", "data":"cap", "defaultContent":"", "orderSequence": [ "desc", "asc"] },
                 { "title": "Capacity Change", "data":"cap_chg", "defaultContent":"", "orderSequence": [ "desc", "asc"] },
-                { "title": "IOPS", "data":"avg_iops", "defaultContent":"", "orderSequence": [ "desc", "asc"]}
+                { "title": "IOPS", "data":"avg_iops", "defaultContent":"", "orderSequence": [ "desc", "asc"], "render": function ( data, type, full, meta ) {return (data!=null?data.toLocaleString():"");}}
             ]
         } );
 
@@ -352,6 +356,9 @@ $(document).ready(function(){
     },
     point: {
       r: 4
+    },
+    tooltip:{
+        format:{}
     }
   };
   args = {"path":base_path, "start_date": start_date, "end_date":end_date, "cluster_num":cluster_num};
