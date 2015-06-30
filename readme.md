@@ -22,7 +22,7 @@ Or, download the zip file (https://github.com/Qumulo/daily_storage_reports/archi
 
 ### 2. Install Prequisites
 
-We currently support Linux or MacOSX for running the Daily Storage Reports.
+We currently support Linux or MacOSX for running the Daily Storage Reports. In some cases, the following commands may show warnings when run, however, the required libraries should still be correctly installed.
 
 #### On Linux (Ubuntu)
 ```shell
@@ -41,10 +41,9 @@ pip install -r requirements.txt
 
 ### 4. Set up the configuration file
 Edit *config.json*
-1. Add your Qumulo cluster information and credentials as well as the email credentials/server. There are descriptions of all required properties. There is also an example
+1. Add your Qumulo cluster information and credentials as well as the email credentials/server. There are descriptions of all required properties. There is also an example of what a typical config file will look like inside of the *cnofig.json* file.
 
 ### 5. Setup crontab and the intitial data
-Setup crontab
 Run *setup-crontab.sh* on the command line to install the scheduled data pulls in your crontab.
 ```shell
 ./setup-daily-reports.sh
