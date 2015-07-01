@@ -7,4 +7,4 @@ function error()
 }
 
 nosetests || error
-# TODO: JSON tests
+./node_modules/jasmine/bin/jasmine.js || error
