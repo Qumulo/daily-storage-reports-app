@@ -1,7 +1,8 @@
 # you will temporarily need an access token in order to access the qumulo rest API via GitHub
 # please send email to mmurray@qumulo.com or ask your SE about how to get a key
-git+https://<oauth2key>:x-oauth-basic@github.com/Qumulo/qumulo_rest_api
+# git+https://<oauth2key>:x-oauth-basic@github.com/Qumulo/qumulo_rest_api
 Flask>=0.10.1
 argparse>=1.2.1
 python-dateutil>=1.5
 pylint>=1.4.4
+nose>=1.3.7

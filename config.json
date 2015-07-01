@@ -1,40 +1,17 @@
 {
     "clusters":[
-        {"name":"<Friendly name of the Qumulo Cluster>", 
-        "sqlite_db_path":"<Full local path of the SQLITE db. It will be created when the app runs the first time>", 
-        "csv_data_path":"<Full local path of the location to save the CSVs of Qumulo API data>",
-        "hostname":"<Hostname of Qumulo storage cluster>",
-        "api_username":"<API user name for Qumulo storage cluster>",
-        "api_password":"<API password for Qumulo storage cluster>"
-        }
-    ],
-    "email_account":{
-        "server":"<smtp server and port, if necessary. if you're using google/gmail, it's smtp.gmail.com:465>",
-        "from_email_address":"<from email address>",
-        "account_username":"<smtp user name (or google/gmail email address)>",
-        "account_password":"<smtp password (or google/gmail password)>"
-    }
-}
-
-/* example configuration
-
-{
-    "clusters":[
-        {"name":"QumuloCluster1", 
-            "sqlite_db_path":"/Users/tommy/work/testing/qumulo-data.db", 
-            "csv_data_path":"/Users/tommy/work/testing/QumuloCluster1",
-            "hostname":"qumulocluster.example.com",
-            "api_username":"apiuser",
-            "api_password":"pass!@#$"
+        {"name":"Music",
+        "sqlite_db_path":"/Users/mmurray/projects/qumulo/samples/daily_storage_reports/data/qumulo-data.db",
+        "csv_data_path":"/Users/mmurray/projects/qumulo/samples/daily_storage_reports/data/qumulo-csv.csv",
+        "hostname":"music.eng.qumulo.com",
+        "api_username":"admin",
+        "api_password":"admin"
         }
     ],
     "email_account":{
         "server":"smtp.gmail.com:465",
-        "from_email":"tommy@example.com",
-        "account_username":"tommy@example.com",
-        "account_password":"pass!@#$"
+        "from_email_address":"michael@qumulo.com",
+        "account_username":"michael@qumulo.com",
+        "account_password":"Jun022015!"
     }
 }
-
-
-*/
