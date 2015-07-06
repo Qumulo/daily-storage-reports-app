@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">
+<title>{{ title }}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <script src="{{ url_for('static', filename='moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery-ui.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='d3.js') }}"></script>
+    <script src="{{ url_for('static', filename='c3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='report-style.css') }}?v=9">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='c3.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='jquery.dataTables.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='jquery-ui.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}"> 
+</head>
+<body class="phantom_{{ phantom }}">
+<script>
+var base_path = "{{ base_path }}";
+var start_date = "{{ start_date }}";
+var end_date = "{{ end_date }}";
+var cluster_num = "{{ cluster_num }}";
+</script>
+<div class="page">
+    <div id="show_menu_button" class="visible">Menu</div>
+    <div id="top_menu" class="hidden">
+        <a id="hide_menu_button">X</a>
+        <form>
+            <table>
+                <tr><td colspan="2"><h3>Filters</h3></td></tr>
+                <tr>
+                    <td class="lbl">Cluster:</td>
+                    <td><select name="cluster_num">
+                 {% for cluster in clusters %}
+                    <option {% if loop.index-1 == cluster_num %}selected{% endif %} value="{{ loop.index-1 }}">{{ cluster.name }}</option>
+                 {% endfor %}
+                    </select></td>
+                </tr>
+                <tr>
+                    <td class="lbl">Path:</td>
+                    <td><input name="path" id="path" value="{{ base_path }}" /></td>
+                </tr>
+                <tr>
+                    <td class="lbl">Start Date:</td>
+                    <td><input type="text" id="start_date" name="start_date" value="{{ start_date }}" /></td>
+                </tr>
+                <tr>
+                    <td class="lbl">End Date:</td>
+                    <td><input type="text" id="end_date" name="end_date" value="{{ end_date }}" /></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center;"><input type="submit" value="Filter Report" /></td>
+                </tr>
+            </table>
+        </form>
+        <br />
+        <br />
+        <br />
+        <div id="emailit">
+            <h3>Email Report</h3>
+            Send pdf of this report to: <textarea name="emails" id="emails" class="unfocus" style="width:250px; height: 54px; font-size: 16px;">List of one or more email recipients separated by a comma</textarea><input type="submit" id="sendit" value="Email Report" />
+        </div>
+        <br />
+        <br />
+    </div>
+    <h1 style="line-height: 1em; ">
+        <div style="margin: 0px auto; width: 600px;">
+            <img style="margin-top: 5px; float: left;" src="static/sm_Qumulo-Logo.png" height="80" />
+            <div style=" float: left; margin-left: 10px; margin-top: 20px; font-size: 44px !important; color: #666;">Storage Report</div>
+            <div style="clear:both;"></div>
+        </div>
+    </h1>
+    <h2 class="main">Cluster: <b>{{ cluster_name }}</b> &nbsp;Directory: <b>{{ base_path }}</b></h2>
+    <div class="report_url">Report URL: <a href="{{ request_url }}">{{ request_url }}</a></div>
+    <!--
+        <h3>Dates: <b>{{ start_date }} - {{ end_date }}</b></h3>
+    -->
+  {{ body }}
+  {% if phantom == "no" %}
+  <div class="chart_outer" id="deets">
+  {% endif %}
+    <h2 id="table_h2">Capacity and IOPS Details by Directory</h2>
+    <div id="table_wrapper">
+    <table cellpadding="0" cellspacing="0" border="0" class="display" id="delta_data_table" width="100%"></table>
+    </div>
+  {% if phantom == "no" %}
+  </div>
+  {% endif %}
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+    "browser": true,
+    "jquery": false,
+    "eqeqeq": true,
+    "curly": true,
+    "quotmark": "double",
+    "strict": true,
+    "trailing": true,
+    "undef": true,
+    "esnext": true,
+    "predef" : [
+        "define",
+        "require",
+        "requirejs",
+        "jasmine",
+        "spyOn",
+        "it",
+        "xit",
+        "console",
+        "describe",
+        "xdescribe",
+        "expect",
+        "beforeEach",
+        "afterEach",
+        "beforeAll",
+        "afterAll",
+        "fail"
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "clusters":[
+        {"name":"Music",
+        "sqlite_db_path":"/Users/mmurray/projects/qumulo/samples/daily_storage_reports/data/qumulo-data.db",
+        "csv_data_path":"/Users/mmurray/projects/qumulo/samples/daily_storage_reports/data/qumulo-csv.csv",
+        "hostname":"music.eng.qumulo.com",
+        "api_username":"admin",
+        "api_password":"admin"
+        }
+    ],
+    "email_account":{
+        "server":"smtp.gmail.com:465",
+        "from_email_address":"michael@qumulo.com",
+        "account_username":"michael@qumulo.com",
+        "account_password":"Jun022015!"
+    }
+}
