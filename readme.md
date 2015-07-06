@@ -35,9 +35,26 @@ brew install python sqlite3 phantomjs
 ```
 
 ### 3. Install the prerequisite python libraries
+
+**NOTE** that `pip install ...` installs the Qumulo REST API as well.
+You will (temporarily) need an Oauth2 access token from Qumulo (send
+email to [mmurray@qumulo.com](mailto:mmurray@qumulo.com) to get a key.
+
+Once you have an Oauth2 key from Qumulo, just replace <oauth2key> in
+thre requiremenets.txt file with the key you received and uncomment the
+line:
+
+git+https://<oauth2key>:x-oauth-basic@github.com/Qumulo/qumulo_rest_api
+
+Once you've updated requirements.txt as above, just run
+
 ```shell
 pip install -r requirements.txt
+
 ```
+
+to install the python prerequisites including the Qumulo REST API
+wrapper.
 
 ### 4. Set up the configuration file
 Edit *config.json*
