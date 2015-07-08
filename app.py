@@ -7,6 +7,7 @@ import smtplib
 import os
 import subprocess
 import argparse
+import re
 
 from apitocsv import ApiToCsv
 from sqlitedb import SqliteDb
@@ -102,8 +103,23 @@ def get_data_json():
 @app.route('/email')
 def send_email():
     config = get_config()
+
+    cluster_num = int(flask.request.args.get('cluster_num', '0'))
+    cluster_name = config["clusters"][cluster_num]["name"]
+    path = flask.request.args.get('path', '/')
+    start_date = flask.request.args.get('start_date', '2015-06-01')
+    end_date = flask.request.args.get('end_date', datetime.datetime.now().strftime("%Y-%m-%d"))
+
+    pdf_name = "qumulo-storage-report-%s-%s-%s-%s.pdf" % (re.sub("[^a-z0-9]+", "_", cluster_name.lower())
+            , re.sub("[^a-z0-9]+", "_", path.lower())
+            , re.sub("[^a-z0-9]+", "", start_date.lower())
+            , re.sub("[^a-z0-9]+", "", end_date.lower())
+            )
+
     cmd = ["phantomjs","phantom-screenshot.js"]
-    cmd.append( flask.request.query_string )
+    qs = flask.request.query_string
+    cmd.append( qs )
+    cmd.append( pdf_name )
     p = subprocess.Popen(cmd, stdout = subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             stdin=subprocess.PIPE)
@@ -113,9 +129,13 @@ def send_email():
     password = config["email_account"]["account_password"]
     fromaddr = config["email_account"]["from_email_address"]
     toaddrs  = flask.request.args.get('to', '').replace(" ", "").split(",")
-    text = "Here's the latest storage report for your Qumulo cluster."
-    subject = "Qumulo Cluster: itstor Storage Report"
-    pdf_name = "qumulo-storage-report.pdf"
+    text = "The latest Qumulo Daily Storage report is attached.<br />\r\n"
+    text += "Cluster Name: <b>" + cluster_name + "</b><br />\r\n"
+    text += "Path: <b>" + path + "</b><br />\r\n"
+    text += "Start Date: <b>" + start_date + "</b><br />\r\n"
+    text += "End Date: <b>" + end_date + "</b><br />\r\n<br />\r\n"
+
+    subject = "Qumulo %s Storage Report %s%s" % (cluster_name, start_date, end_date, " For Path: " + path if path != "/" else "")
     html_message = text
     msg = MIMEMultipart()
     msg['Subject'] = subject
@@ -198,7 +218,7 @@ def show_index():
                             , cluster_num=cluster_num
                             , body=body_content
                             , phantom=phantom
-                            , request_url=flask.request.url
+                            , request_url=re.sub("(to|phantom)=[^&]+[&]*", "", flask.request.url)
                             , title="Qumulo Storage Status Report")
 
 

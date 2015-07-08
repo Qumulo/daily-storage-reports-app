@@ -19,7 +19,7 @@ page.open('http://localhost:8080/?phantom=yes&' + args[1], function(status) {
   console.log("Status: " + status);
   if(status === "success") {
     setTimeout(function() {
-        page.render('qumulo-storage-report.pdf');
+        page.render(args[2]);
         phantom.exit();
     }, 2000);
   }

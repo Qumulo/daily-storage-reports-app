@@ -321,8 +321,7 @@ $(document).ready(function(){
     $btn = $(this);
     $btn.prop("disabled",true);
     $("#emails").prop("disabled",true);
-    var url = "/email?to=" + $("#emails").val() + window.location.search.replace("?", "&");
-    console.log(url);
+    var url = "/email?to=" + $("#emails").val() + "&" + $("form").serialize();
     $.get(url, function(){
         $btn.prop("disabled",false);
         $("#emails").prop("disabled",false);
