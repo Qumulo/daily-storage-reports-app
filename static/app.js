@@ -277,6 +277,13 @@ function render_path_stats(){
                 }
                 $el.html("<div class='bb cap_chg " + (sz < 0?"neg":"pos")+ "' style='width:" + (80*(Math.abs(sz) / maxes["cap_chg"])) + "px; " + pos_str + "'></div><div class='cap_chg_num' style='" + label_style + "'>" + (sz>0?"+":"") + nice_bytes(sz) + "</div>&nbsp;");
             }
+
+            $el = $($(this).find("td")[4]);
+            var iop_val = $el.text().replace(/[,]+/g, "");
+            if($.isNumeric(iop_val)){
+                var sz = parseFloat(iop_val);
+                $el.html("<div class='bb cap' style='width:" + (80*(sz / maxes["avg_iops"])) + "px'></div><div class='cap_num'>" + $el.text() + "</div>&nbsp;");
+            }
         });
 
       $(".path_link").click(function(){
