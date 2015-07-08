@@ -2,6 +2,7 @@ import sqlite3
 import csv
 import sys
 import glob
+import datetime
 from collections import OrderedDict
 
 class SqliteDb(object):
@@ -315,30 +316,29 @@ class SqliteDb(object):
         sqls = {}
 
         sqls["capacity"] = """
-                select timestamp, total_used_capacity
+                select timestamp, MAX(CASE WHEN path = '%(path)s' THEN total_used_capacity ELSE 0 END) total_used_capacity
                 from report_daily_path_metrics 
-                WHERE path = '%(path)s'
-                AND timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
-                AND total_used_capacity IS NOT NULL
+                WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
+                GROUP BY 1
                 ORDER BY 1
         """
 
         sqls["iops"] = """
                 select timestamp
-                , round(avg_iops) avg_iops
+                , MAX(CASE WHEN path = '%(path)s' THEN round(avg_iops) ELSE 0 END) avg_iops
                 from report_daily_path_metrics 
-                WHERE path = '%(path)s'
-                AND timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
+                WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
+                GROUP BY 1
                 ORDER BY 1
         """
 
         sqls["file_iops"] = """
                 select timestamp
-                , round(avg_file_read_iops) avg_file_read_iops
-                , round(avg_file_write_iops) avg_file_write_iops
+                , MAX(CASE WHEN path = '%(path)s' THEN round(avg_file_read_iops) ELSE 0 END) avg_file_read_iops
+                , MAX(CASE WHEN path = '%(path)s' THEN round(avg_file_write_iops) ELSE 0 END) avg_file_write_iops
                 from report_daily_path_metrics 
-                WHERE path = '%(path)s'
-                AND timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
+                WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
+                GROUP BY 1
                 ORDER BY 1
         """
 
@@ -346,10 +346,8 @@ class SqliteDb(object):
                 select strftime('%%Y-%%m-%%d', timestamp) timestamp
                 , avg(avg_read_throughput) avg_read_throughput
                 , avg(avg_write_throughput) avg_write_throughput
-
                 , max(avg_read_throughput) max_read_throughput
                 , max(avg_write_throughput) max_write_throughput
-
                 from report_hourly_metrics 
                 WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s 23:59:59'
                 GROUP BY 1
@@ -357,14 +355,21 @@ class SqliteDb(object):
         """
 
         sqls["path_stats"] = """
-            SELECT path_level, t.path, t1.total_used_capacity cap, COALESCE(t1.total_used_capacity, 0) - COALESCE(t0.total_used_capacity, 0) cap_chg, t.avg_iops
+            SELECT path_level, t.path, t1.total_used_capacity cap
+            , COALESCE(t1.total_used_capacity, 0) - COALESCE(t0.total_used_capacity, 0) cap_chg
+            , round(t.sum_iops / timestamp_count) avg_iops
             FROM
             (
-            SELECT path_level, path, count(1) data_count, round(avg(avg_iops)) avg_iops
+            SELECT path_level, path, sum(avg_iops) sum_iops
             FROM report_daily_path_metrics 
             WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
             GROUP BY 1, 2
             ) t
+            JOIN (
+            select count(distinct timestamp) timestamp_count
+            FROM report_daily_path_metrics 
+            WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
+            ) ts ON timestamp_count > 0
             LEFT JOIN (
             SELECT path, total_used_capacity
             FROM report_daily_path_metrics 
@@ -384,6 +389,10 @@ class SqliteDb(object):
             select min(timestamp) start_date, max(timestamp) end_date 
             from report_daily_path_metrics
         """
+
+        # end date can't be in the future
+        if "end_date" in args and args["end_date"] > datetime.datetime.now().strftime("%Y-%m-%d"):
+            args["end_date"] = datetime.datetime.now().strftime("%Y-%m-%d")
 
         sql = sqls[data_query] % args
         self.cn_c.execute(sql)

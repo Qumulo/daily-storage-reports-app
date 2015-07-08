@@ -1,0 +1,17 @@
+{
+    "clusters":[
+        {"name":"QumuloCluster1", 
+            "sqlite_db_path":"/Users/user/work/testing/qumulo-data.db", 
+            "csv_data_path":"/Users/user/work/testing/QumuloCluster1",
+            "hostname":"qumulocluster.example.com",
+            "api_username":"apiuser",
+            "api_password":"pass!@#$"
+        }
+    ],
+    "email_account":{
+        "server":"smtp.gmail.com:465",
+        "from_email":"tommy@example.com",
+        "account_username":"tommy@example.com",
+        "account_password":"pass!@#$"
+    }
+}

@@ -43,6 +43,10 @@ function render_capacity(config, args){
         var top_perc_line = Math.ceil(20 * max_val / total_cap) / 20;
         var bottom_perc_line = Math.floor(20 * max_val / total_cap) / 20;
 
+        if(max_val / total_cap < 0.02){
+            top_perc_line = max_val / total_cap;
+        }
+
         config["bindto"] = "#capacity";
         config["data"]["json"] = d;
         config["data"]["keys"]["x"] = "timestamp";
@@ -54,11 +58,13 @@ function render_capacity(config, args){
         if(min_val > bottom_perc_line * total_cap)
             config["axis"]["y"]["min"] = bottom_perc_line * total_cap * 0.85;
         config["axis"]["y"]["tick"]["format"] = function (x) { return nice_bytes(x); };
-        config["grid"]["y"]["lines"].push(
-                { value: top_perc_line * total_cap,
-                text: Math.round(top_perc_line * 100) + "% of Total Capacity",
-                position: 'middle'}
-        );
+        if(top_perc_line >= 0.05){
+            config["grid"]["y"]["lines"].push(
+                    { value: top_perc_line * total_cap,
+                    text: Math.round(top_perc_line * 100) + "% of Total Capacity",
+                    position: 'middle'}
+            );
+        }
         if(bottom_perc_line > 0){
             config["grid"]["y"]["lines"].push(
                     { value: bottom_perc_line * total_cap,
