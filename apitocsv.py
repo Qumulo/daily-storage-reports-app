@@ -248,7 +248,7 @@ class ApiToCsv:
         if ent['path'] == '/' and grand_total_capcity == -1:
             grand_total_capcity = float(ent['total_capacity'])
 
-        if float(ent['total_capacity']) / grand_total_capcity >= 0.0001:
+        if float(ent['total_capacity']) / grand_total_capcity >= 0.001:
             data = OrderedDict()
             data["timestamp"]=self.timestamp
             data["levels"]=ent['path'].count ('/')
@@ -263,7 +263,7 @@ class ApiToCsv:
 
         for f in ent['files']:
             full_path = re.sub("[/]+", "/", ent['path'] + f['name'])
-            if float(f['capacity_usage']) / grand_total_capcity >= 0.0001:
+            if float(f['capacity_usage']) / grand_total_capcity >= 0.001:
                 data = OrderedDict()
                 data["timestamp"]=self.timestamp
                 data["levels"]=full_path.count ('/')
@@ -276,6 +276,6 @@ class ApiToCsv:
                     self.add_data(self.datestamp + "-" + table_name+ ".csv" , data)
                     self.files_added[full_path] = 1
 
-            if float(f['capacity_usage']) / grand_total_capcity > 0.0005:
+            if float(f['capacity_usage']) / grand_total_capcity > 0.001:
                 self.get_capacity_by_path(table_name, ent['path'] + f['name'], grand_total_capcity)
 

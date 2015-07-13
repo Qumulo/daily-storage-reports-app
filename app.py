@@ -83,6 +83,60 @@ def aggregate_data(cluster):
         current_day += delta_day
 
 
+def check_alerts():
+    configs = get_config()
+
+    alerts_sql = """
+        SELECT *
+        FROM alert_rule
+        WHERE rule_status = 1
+    """
+
+    sqls = {}
+
+    sqls["iops"] = """
+        SELECT * 
+        FROM (select path, level, round(sum(file_read+file_write+namespace_read+namespace_write)/60) iops 
+        FROM iops_by_path 
+        WHERE timestamp >= datetime('%(now)s', '-3 hour') 
+        group by 1, 2) t 
+        WHERE iops %(expr)s %(val)s
+        AND path = '%(path)s'
+        ORDER BY level
+    """
+
+    sqls["capacity"] = """
+        SELECT *
+        FROM
+        (
+        SELECT path
+        , MAX(CASE WHEN timestamp = '2015-07-12' THEN total_used_capacity ELSE 0 END) used
+        , MAX(CASE WHEN timestamp = '2015-07-12' THEN total_used_capacity ELSE 0 END)
+        - MAX(CASE WHEN timestamp = '2015-07-11' THEN total_used_capacity ELSE 0 END) change
+        FROM report_daily_path_metrics
+        WHERE timestamp in ('2015-07-11', '2015-07-12')
+        GROUP BY 1
+        ) t
+        WHERE change >= 1e11
+    """
+
+    for config in configs["clusters"]:
+        db = SqliteDb(config["sqlite_db_path"], config["csv_data_path"])
+        db.get_schemas()
+        db.import_table_for_date("iops_by_path", datetime.datetime.now().strftime("%Y-%m-%d"))
+        alerts = db.get_results(alerts_sql)
+        for alert in alerts:
+            alert["now"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            sql = sqls[alert["alert_type"]] % alert
+            print sql
+            filtered_rows = db.get_results(sql)
+            print filtered_rows
+
+
+
+
+
+
 @app.route('/get-data-json')
 def get_data_json():
     cluster_num = int(flask.request.args.get('cluster_num', '0'))
@@ -251,5 +305,9 @@ if __name__ == '__main__':
 
     elif args.op == "server":
         app.run(host='0.0.0.0', port=8080, threaded=True)
+
+    elif args.op == "alerts":
+        check_alerts()
+
 
 
