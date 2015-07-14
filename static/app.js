@@ -30,7 +30,7 @@ function draw_highlight(name, datas){
 
 function render_capacity(config, args){
 
-    $.getJSON( "get-data-json?d=capacity&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"] + "&cluster_num=" + args["cluster_num"], function(json_data) {
+    $.getJSON( "get-data-json?d=capacity&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"] + "&cluster_name=" + args["cluster_name"], function(json_data) {
         var d = json_data["data"];
 
         var min_val = d3.min(d, function(v) { return v.total_used_capacity;} );
@@ -117,7 +117,7 @@ function render_capacity(config, args){
 
 
 function render_throughput(config, args){
-    $.getJSON( "get-data-json?d=throughput&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_num=" + args["cluster_num"], function(json_data) {
+    $.getJSON( "get-data-json?d=throughput&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_name=" + args["cluster_name"], function(json_data) {
         var d = json_data["data"];
         config["bindto"] = "#throughput";
         config["data"]["json"] = d;
@@ -156,7 +156,7 @@ function render_throughput(config, args){
 
 
 function render_iops(config, args){
-    $.getJSON( "get-data-json?d=iops&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_num=" + args["cluster_num"], function(json_data) {
+    $.getJSON( "get-data-json?d=iops&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_name=" + args["cluster_name"], function(json_data) {
         var d = json_data["data"];
         config["bindto"] = "#iops";
         config["data"]["json"] = d;
@@ -181,7 +181,7 @@ function render_iops(config, args){
 
 
 function render_file_iops(config, args){
-    $.getJSON( "get-data-json?d=file_iops&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_num=" + args["cluster_num"], function(json_data) {
+    $.getJSON( "get-data-json?d=file_iops&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_name=" + args["cluster_name"], function(json_data) {
         var d = json_data["data"];
         config["bindto"] = "#file_iops";
         config["data"]["json"] = d;
@@ -213,7 +213,7 @@ function render_file_iops(config, args){
 
 
 function render_path_stats(){
-    $.getJSON( "get-data-json?d=path_stats&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_num=" + args["cluster_num"], function(json_data) {
+    $.getJSON( "get-data-json?d=path_stats&path=" + args["path"] + "&start_date=" + args["start_date"] + "&end_date=" + args["end_date"]+ "&cluster_name=" + args["cluster_name"], function(json_data) {
         $("#delta_data_table").css({"width":$("body").width() - 30 + "px !important"});
 
         var maxes = {};
@@ -286,7 +286,12 @@ function render_path_stats(){
             }
         });
 
-      $(".path_link").click(function(){
+      $('#delta_data_table tbody tr td:nth-child(3) .cap_num').click(function(){
+        path = $(this).parent().parent().children("td:eq(1)").text();
+        window.location.href = "/alerts?alert_type=total used capacity&cluster_name=" + cluster_name + "&path=" + path + "&val=" + $(this).text();
+      })
+
+      $(".path_link:not(:first)").click(function(){
         $("#path").val($(this).text());
         $("form").submit();
       })
@@ -321,7 +326,7 @@ $(document).ready(function(){
     });
 
     $("select").change(function(){
-        window.location.href = "/?cluster_num=" + $(this).val();
+        window.location.href = "/?cluster_name=" + $(this).val();
     });
 
   $("#sendit").click(function(){
@@ -373,7 +378,7 @@ $(document).ready(function(){
         format:{}
     }
   };
-  args = {"path":base_path, "start_date": start_date, "end_date":end_date, "cluster_num":cluster_num};
+  args = {"path":base_path, "start_date": start_date, "end_date":end_date, "cluster_name":cluster_name};
   cols = {}
   render_capacity($.extend(true, {}, chart_config), args);
   if(base_path == "/"){

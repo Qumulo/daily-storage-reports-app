@@ -22,7 +22,7 @@
 var base_path = "{{ base_path }}";
 var start_date = "{{ start_date }}";
 var end_date = "{{ end_date }}";
-var cluster_num = "{{ cluster_num }}";
+var cluster_name = "{{ cluster_name }}";
 </script>
 <div class="page">
     <div id="show_menu_button" class="visible">Menu</div>
@@ -33,9 +33,9 @@ var cluster_num = "{{ cluster_num }}";
                 <tr><td colspan="2"><h3>Filters</h3></td></tr>
                 <tr>
                     <td class="lbl">Cluster:</td>
-                    <td><select name="cluster_num">
+                    <td><select name="cluster_name">
                  {% for cluster in clusters %}
-                    <option {% if loop.index-1 == cluster_num %}selected{% endif %} value="{{ loop.index-1 }}">{{ cluster.name }}</option>
+                    <option {% if cluster.name == cluster_name %}selected{% endif %} value="{{ cluster.name }}">{{ cluster.name }}</option>
                  {% endfor %}
                     </select></td>
                 </tr>

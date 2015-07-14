@@ -142,8 +142,9 @@ class SqliteDb(object):
     {
     "name":"alert_rule",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
-            created_timestamp DATETIME
+        CREATE TABLE %(table_name)s (
+            alert_id INTEGER PRIMARY KEY 
+            , created_timestamp DATETIME
             , alert_type VARCHAR(16)
             , path VARCHAR(2048)
             , expr VARCHAR(6) 
