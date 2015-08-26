@@ -13,5 +13,6 @@
         "from_email":"tommy@example.com",
         "account_username":"tommy@example.com",
         "account_password":"pass!@#$"
-    }
+    },
+    "url":"http://dailystoragereports.example.com:8080"
 }

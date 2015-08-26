@@ -1,5 +1,6 @@
 var system = require('system');
 var args = system.args;
+var fs = require('fs')
 
 var page = require('webpage').create();
 page.paperSize = {
@@ -15,7 +16,9 @@ page.viewportSize = {
   height: 900
 };
 
-page.open('http://localhost:8555/?phantom=yes&' + args[1], function(status) {
+var config = JSON.parse(fs.read('config.json'));
+
+page.open('http://' + config["url"] + '/?phantom=yes&' + args[1], function(status) {
   console.log("Status: " + status);
   if(status === "success") {
     setTimeout(function() {

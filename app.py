@@ -119,7 +119,7 @@ def check_alerts():
         SELECT *
         FROM alert_rule
         WHERE rule_status = 1
-        AND send_count <= max_send_count
+        AND send_count < max_send_count
         AND COALESCE(last_send_timestamp, datetime('%s', '-7 DAY')) < datetime('%s', '-23 HOUR')
     """
 

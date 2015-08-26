@@ -91,7 +91,12 @@ class ApiToCsv:
     def get_dashstats(self, table_name, time_inteval_seconds=5):
         api_begin_time = int(time.time()-60*60*25) # 24 hours of data, the max Qumulo stores
 
-        res = self.qumulo_api_call(self.api_cli.stats.time_series_get, begin_time=api_begin_time)
+        # handle multiple api versions
+        try:
+            time_series_get_func = self.api_cli.stats.time_series_get
+        except AttributeError:
+            time_series_get_func = self.api_cli.analytics.time_series_get
+        res = self.qumulo_api_call(time_series_get_func, begin_time=api_begin_time)
         metrics = {"iops.read.rate":"iops_read", "iops.write.rate":"iops_write", "throughput.read.rate":"throughput_read", "throughput.write.rate":"throughput_write"}
         files = {}
         for d in res:
@@ -163,8 +168,13 @@ class ApiToCsv:
 
     #  Get sampled IOPS data 
     def get_iops_by_path(self, table_name):
-        # Pull IOPS data for all types (namespace read/write and file read/writ)
-        res = self.qumulo_api_call(self.api_cli.stats.iops_get)
+        # Pull IOPS data for all types (namespace read/write and file read/write)
+        # Handle multiple API versions
+        try:
+            iops_get_func = self.api_cli.stats.iops_get
+        except AttributeError:
+            iops_get_func = self.api_cli.analytics.iops_get
+        res = self.qumulo_api_call(iops_get_func)
 
         ip_iops = {}
         # Resolve inode ids to file paths
