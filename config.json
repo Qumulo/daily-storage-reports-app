@@ -1,17 +1,17 @@
 {
     "clusters":[
-        {"name":"Product", 
-            "sqlite_db_path":"/Users/tommy/work/testing/product-data.db", 
-            "csv_data_path":"/Users/tommy/work/testing/product-csvs",
-            "hostname":"pu1-10g.eng.qumulo.com",
-            "api_username":"admin",
-            "api_password":"admin"
+        {"name":"<Friendly name of the Qumulo Cluster>", 
+        "sqlite_db_path":"<Full local path of the SQLITE db. It will be created when the app runs the first time>", 
+        "csv_data_path":"<Full local path of the location to save the CSVs of Qumulo API data>",
+        "hostname":"<Hostname of Qumulo storage cluster>",
+        "api_username":"<API user name for Qumulo storage cluster>",
+        "api_password":"<API password for Qumulo storage cluster>"
         }
     ],
     "email_account":{
-        "server":"smtp.gmail.com:465",
-        "from_email_address":"tommy@qumulo.com",
-        "account_username":"tommy@qumulo.com",
-        "account_password":"V3nec!a1"
+        "server":"<smtp server and port, if necessary. if you're using google/gmail, it's smtp.gmail.com:465>",
+        "from_email_address":"<from email address>",
+        "account_username":"<smtp user name (or google/gmail email address)>",
+        "account_password":"<smtp password (or google/gmail password)>"
     }
 }

@@ -33,6 +33,9 @@
 
     }
 
+    th, td{
+        font-size: 0.8em !important;
+    }
     </style>
 </head>
 <body class="">
@@ -79,7 +82,7 @@ $(document).ready(function(){
                 , type:  "select"
                 , options: [">=", "<=" ] },
             { label: 'Value',  name: 'val'  },
-            { label: 'Recipients',  name: 'recipients'  },
+            { label: 'Recipients',  name: 'recipients', type:  "textarea" },
             { label: 'Max Send Count',  name: 'max_send_count'  },
             { label: 'Send Count',  name: 'send_count'  },
         ]
@@ -113,7 +116,11 @@ $(document).ready(function(){
             { data: 'path' },
             { data: 'expr' },
             { data: 'val' },
-            { data: 'recipients' },
+            { data: 'recipients'
+                , render: function ( data, type, full, meta ) {
+                    return data.replace(/[,]/g, ",<br />");
+                }
+             },
             { data: 'max_send_count' },
             { data: 'send_count' },
             // etc
@@ -135,7 +142,10 @@ $(document).ready(function(){
             .set("val", decodeURIComponent(QueryString.val))
             .set("max_send_count", 2)
             .set("send_count", 0)
-            .set("alert_type", decodeURIComponent(QueryString.alert_type));
+            .set("alert_type", decodeURIComponent(QueryString.alert_type))
+            .on("submitSuccess", function(){
+                window.location.href = "/alerts";
+            });
     }
 
 
@@ -143,7 +153,10 @@ $(document).ready(function(){
 </script>
 <div class="page">
 
-
+<a href="/" style="padding: 7px; display: block; background-color: #fca; color: rgb(31, 119, 180); width: 220px; right: 10px; position: absolute;">Back to Daily Storage Reports</a>
+<br />
+<br />
+<br />
 <table id="data">
     <thead>
             <tr>
@@ -151,11 +164,11 @@ $(document).ready(function(){
                 <th>Cluster</th>
                 <th>Alert type</th>
                 <th>Path</th>
-                <th>Expression</th>
+                <th>Expr</th>
                 <th>Value</th>
                 <th>Recipients</th>
-                <th>Max Send Count</th>
-                <th>Send Count</th>
+                <th width="5%">Max Send Count</th>
+                <th width="5%">Send Count</th>
             </tr>
     </thead>
 

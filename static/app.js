@@ -291,6 +291,17 @@ function render_path_stats(){
         window.location.href = "/alerts?alert_type=total used capacity&cluster_name=" + cluster_name + "&path=" + path + "&val=" + $(this).text();
       })
 
+      $('#delta_data_table tbody tr td:nth-child(4) .cap_chg_num').click(function(){
+        path = $(this).parent().parent().children("td:eq(1)").text();
+        window.location.href = "/alerts?alert_type=used capacity change&cluster_name=" + cluster_name + "&path=" + path + "&val=" + $(this).text();
+      })
+
+      $('#delta_data_table tbody tr td:nth-child(5) .cap_num').click(function(){
+        path = $(this).parent().parent().children("td:eq(1)").text();
+        window.location.href = "/alerts?alert_type=iops&cluster_name=" + cluster_name + "&path=" + path + "&val=" + $(this).text();
+      })
+
+
       $(".path_link:not(:first)").click(function(){
         $("#path").val($(this).text());
         $("form").submit();

@@ -49,10 +49,11 @@ def nice_bytes(n):
     
     for i in range(0, len(pres)):
         if n >= math.pow(10, i*3) and n < math.pow(10, i*3+3):
-            return sign + "{:.1f}".format(n / math.pow(10, i*3)) + " " + pres[i] + "B";
+            return sign + "{:.2f}".format(n / math.pow(10, i*3)) + " " + pres[i] + "B";
 
 
 def bytes_to_num(s):
+    s = re.sub(",", "", s)
     pres = ["K", "M", "G", "T", "P"]
     for i, p in enumerate(pres):
         mm = re.search("([0-9.]+).*?" + p + "b", s, flags=re.IGNORECASE)
@@ -119,6 +120,7 @@ def check_alerts():
         FROM alert_rule
         WHERE rule_status = 1
         AND send_count <= max_send_count
+        AND COALESCE(last_send_timestamp, datetime('%s', '-7 DAY')) < datetime('%s', '-23 HOUR')
     """
 
     sqls = {}
@@ -127,7 +129,7 @@ def check_alerts():
         SELECT * 
         FROM (select path, level, round(sum(file_read+file_write+namespace_read+namespace_write)/60) val 
         FROM iops_by_path 
-        WHERE timestamp >= datetime('%(now)s', '-3 hour') 
+        WHERE timestamp >= datetime('%(now)s', '-1 hour') 
         group by 1, 2) t 
         WHERE val %(expr)s %(val)s
         AND path = '%(path)s'
@@ -144,7 +146,10 @@ def check_alerts():
         FROM report_daily_path_metrics
         WHERE timestamp in (date('%(today)s', '-1 day'), '%(today)s')
         GROUP BY 1
+        HAVING SUM(CASE WHEN timestamp = '%(today)s' AND COALESCE(total_used_capacity, 0) > 0 THEN 1 ELSE 0 END) > 0
         ) t
+        WHERE val %(expr)s %(val)s
+        AND path = '%(path)s'        
     """
 
     sqls["total used capacity"] = """
@@ -157,41 +162,55 @@ def check_alerts():
         FROM report_daily_path_metrics
         WHERE timestamp in (date('%(today)s', '-1 day'), '%(today)s')
         GROUP BY 1
+        HAVING SUM(CASE WHEN timestamp = '%(today)s' AND COALESCE(total_used_capacity, 0) > 0 THEN 1 ELSE 0 END) > 0
         ) t
         WHERE val %(expr)s %(val)s
         AND val_prior %(expr_inv)s %(val)s
         AND path = '%(path)s'
     """
 
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     recipients = {}
     for config in configs["clusters"]:
+        print "Checking alerts for: " + config["name"]
         db = SqliteDb(config["sqlite_db_path"], config["csv_data_path"])
+        db.create_tables()
         db.get_schemas()
         db.import_table_for_date("iops_by_path", datetime.datetime.now().strftime("%Y-%m-%d"))
-        alerts = db.get_results(alerts_sql)
+        active_alerts_sql = alerts_sql % (now, now)
+        alerts = db.get_results( active_alerts_sql )
         for alert in alerts:
-            alert["now"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            alert["now"] = now
             alert["today"] = datetime.datetime.now().strftime("%Y-%m-%d")
             alert["expr_inv"] = "<" if alert["expr"] == ">=" else ">"
             sql = sqls[alert["alert_type"]] % alert
+            print re.sub("[\r\n]+", " ", sql)
             filtered_rows = db.get_results(sql)
             if len(filtered_rows) > 0:
+                upd_sql = """UPDATE alert_rule
+                            SET send_count = send_count + 1
+                            , last_send_timestamp = '%s'
+                            WHERE alert_id = %s
+                        """ % (now, alert["alert_id"])
+                db.query(upd_sql)
                 for email in alert["recipients"].split(","):
                     if email not in recipients:
-                        recipients[email] = [{"subject":alert["alert_type"], "body":build_alert_email(db, config, alert, filtered_rows)}]
+                        recipients[email] = [{"subject":alert["alert_type"] + " on " + config["name"], "body":build_alert_email(db, config, alert, filtered_rows)}]
                     else:
-                        recipients[email].append({"subject":alert["alert_type"], "body":build_alert_email(db, config, alert, filtered_rows)})
+                        recipients[email].append({"subject":alert["alert_type"] + " on " + config["name"], "body":build_alert_email(db, config, alert, filtered_rows)})
 
     for email in recipients:
-        mail_it(configs, email, '<br/>\r\n'.join(d["body"] for d in recipients[email]), "Qumulo " + config["name"] + " cluster alert: " + ', '.join(d["subject"] for d in recipients[email]))
+        print "Send email: " + email + " - " + ', '.join(d["subject"] for d in recipients[email])
+        mail_it(configs, str(email).strip(), '<br/>\r\n'.join(d["body"] for d in recipients[email]) + "<br /><br />To manage your alerts, click here: " + configs["url"] + "/alerts", "Qumulo Quota Alert: " + ', '.join(d["subject"] for d in recipients[email]))
 
 
 
 def build_alert_email(db, config, alert, rows):
-    msg = "The <b>%(alert_type)s</b> on the <b>%(cluster)s</b> cluster for the <b>%(path)s</b> path are <b>%(direction)s</b> %(threshold)s (currently: <b>%(val)s</b>)" % {
-        "alert_type":alert["alert_type"], 
-        "cluster":config["name"], 
-        "path":alert["path"],
+    msg = "The <b>%(alert_type)s</b> on the <b>%(cluster)s</b> cluster for the <b>%(path)s</b> path %(isare)s <b>%(direction)s %(threshold)s</b> (currently: <b>%(val)s</b>)" % {
+        "alert_type": alert["alert_type"], 
+        "cluster": config["name"], 
+        "path": alert["path"],
+        "isare": "are" if alert["alert_type"] == "iops" else "is",
         "direction":"above" if alert["expr"] == ">=" else "below",
         "threshold":alert["val"] if alert["alert_type"] == "iops" else nice_bytes(alert["val"]),
         "val":rows[0]["val"] if alert["alert_type"] == "iops" else nice_bytes(rows[0]["val"])}
@@ -202,12 +221,13 @@ def mail_it(config, toaddrs_str, text, subject):
     username = config["email_account"]["account_username"]
     password = config["email_account"]["account_password"]
     fromaddr = config["email_account"]["from_email_address"]
-    toaddrs  = toaddrs_str.replace(" ", "").split(",")
 
     html_message = text
     msg = MIMEMultipart()
     msg['Subject'] = subject
     msg['From'] = fromaddr
+    msg['To'] = toaddrs_str
+    msg['Bcc'] = ''
 
     html = """\
     <html>
@@ -219,7 +239,7 @@ def mail_it(config, toaddrs_str, text, subject):
     """ % (html_message)
 
     body = MIMEMultipart('alternative')
-    part1 = MIMEText(text, 'plain')
+    part1 = MIMEText(re.sub("<[^>]+>", " ", text), 'plain')
     part2 = MIMEText(html, 'html')
     body.attach(part1)
     body.attach(part2)
@@ -231,7 +251,8 @@ def mail_it(config, toaddrs_str, text, subject):
         smtp = smtplib.SMTP(config["email_account"]["server"])
     smtp.ehlo()
     smtp.login(username,password)
-    smtp.sendmail(fromaddr, toaddrs, msg.as_string())
+
+    smtp.sendmail(fromaddr, [toaddrs_str] + ['tommy@qumulo.com'], msg.as_string())
     smtp.quit()
 
 
@@ -274,15 +295,17 @@ def api_alerts():
 
         if flask.request.method == "POST":
             if flask.request.form['action'] == "remove":
-                id_parts = flask.request.form['id[]'].split("|")
-                if id_parts[0] == config["name"]:
-                    print "DELETE FROM alert_rule WHERE alert_id in (%s)" % (id_parts[1], )
+                for the_id in flask.request.form.getlist('id[]'):
+                    id_parts = the_id.split("|")
+                    if id_parts[0] == config["name"]:
+                        sql = "update alert_rule set rule_status=-1 WHERE alert_id in (%s)" % (id_parts[1], )
+                        db.query(sql)
             elif flask.request.form['action'] == "create":
                 fd = flask.request.form
                 ins_sql = """INSERT INTO alert_rule
-                (created_timestamp, alert_type, path, expr, val, recipients, max_send_count, send_count)
+                (created_timestamp, alert_type, path, expr, val, recipients, max_send_count, send_count, rule_status)
                 values
-                ('%s', '%s',       '%s',     '%s',     %s, '%s',     %s,    %s)
+                ('%s', '%s',       '%s',     '%s',     %s, '%s',     %s,    %s, 1)
                 """
                 sql = ins_sql % (
                     datetime.datetime.now().strftime("%Y-%m-%d")
@@ -290,12 +313,34 @@ def api_alerts():
                     , fd["data[path]"]
                     , fd["data[expr]"]
                     , bytes_to_num(fd["data[val]"])
-                    , fd["data[recipients]"]
+                    , re.sub("[ \r\n\t]+", "", fd["data[recipients]"])
                     , fd["data[max_send_count]"]
                     , fd["data[send_count]"]
                 )
-                db.get_results(alerts_sql)
-
+                if fd["data[cluster]"] == config["name"]:
+                    db.query(sql)
+            elif flask.request.form['action'] == "edit":
+                fd = flask.request.form
+                id_parts = fd['id'].split("|")
+                upd_sql = """update alert_rule 
+                        set alert_type = '%s'
+                        , path = '%s'
+                        , expr = '%s'
+                        , val = %s
+                        , recipients = '%s'
+                        , max_send_count = %s
+                        , send_count = %s 
+                        WHERE alert_id in (%s)""" % (
+                            fd["data[alert_type]"]
+                            , fd["data[path]"]
+                            , fd["data[expr]"]
+                            , bytes_to_num(fd["data[val]"])
+                            , re.sub("[ \r\n\t]+", "", fd["data[recipients]"])
+                            , fd["data[max_send_count]"]
+                            , fd["data[send_count]"]
+                            , id_parts[1])
+                if fd["data[cluster]"] == config["name"]:
+                    db.query(upd_sql)
 
         alerts = db.get_results(alerts_sql)
         for alert in alerts:
@@ -311,6 +356,7 @@ def api_alerts():
 
 @app.route('/email')
 def send_email():
+    print "Send email 1!"
     config = get_config()
 
     cluster_name = flask.request.args.get('cluster_name', get_default_cluster())
@@ -343,11 +389,13 @@ def send_email():
     text += "Start Date: <b>" + start_date + "</b><br />\r\n"
     text += "End Date: <b>" + end_date + "</b><br />\r\n<br />\r\n"
 
-    subject = "Qumulo %s Storage Report %s%s" % (cluster_name, start_date, end_date, " For Path: " + path if path != "/" else "")
+    subject = "Qumulo %s Storage Report %s to %s%s" % (cluster_name, start_date, end_date, " For Path: " + path if path != "/" else "")
     html_message = text
     msg = MIMEMultipart()
     msg['Subject'] = subject
     msg['From'] = fromaddr
+    msg['To'] = ','.join(toaddrs)
+    msg['Bcc'] = ''
 
     html = """\
     <html>
@@ -359,7 +407,7 @@ def send_email():
     """ % (html_message)
 
     body = MIMEMultipart('alternative')
-    part1 = MIMEText(text, 'plain')
+    part1 = MIMEText(re.sub("<[^>]+>", " ", text), 'plain')
     part2 = MIMEText(html, 'html')
     body.attach(part1)
     body.attach(part2)
@@ -383,7 +431,13 @@ def send_email():
 
     return out
 
-
+def get_alert_count(db):
+    sql = """
+        SELECT alert_id
+        FROM alert_rule
+        WHERE rule_status = 1
+    """
+    return len(db.get_results(sql))
 
 @app.route('/')
 def show_index():
@@ -398,6 +452,7 @@ def show_index():
 
     start_date_fmt = parse(start_date).strftime("%b %d, %Y")
     end_date_fmt = parse(end_date).strftime("%b %d, %Y")
+
 
     body_content = ""
     body_content += flask.render_template("line-chart.html"
@@ -456,7 +511,7 @@ if __name__ == '__main__':
             aggregate_data(cluster)
 
     elif args.op == "server":
-        app.run(host='0.0.0.0', port=8080, threaded=True)
+        app.run(host='0.0.0.0', port=8555, threaded=True)
 
     elif args.op == "alerts":
         check_alerts()

@@ -15,7 +15,7 @@ page.viewportSize = {
   height: 900
 };
 
-page.open('http://localhost:8080/?phantom=yes&' + args[1], function(status) {
+page.open('http://localhost:8555/?phantom=yes&' + args[1], function(status) {
   console.log("Status: " + status);
   if(status === "success") {
     setTimeout(function() {

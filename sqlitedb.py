@@ -153,6 +153,7 @@ class SqliteDb(object):
             , send_count INT
             , max_send_count INT
             , rule_status INT
+            , last_send_timestamp DATETIME
         )
         """}
     ]
@@ -176,7 +177,6 @@ class SqliteDb(object):
 
     def create_tables(self):
         for table in self.tables:
-            print "Creating table: " + table["name"]
             try:
                 self.cn_c.execute(table["create_sql"] % {"table_name":table["name"]})
                 self.cn.commit()
@@ -416,10 +416,16 @@ class SqliteDb(object):
         rows = self.cn_c.fetchall()
         return {"sql": sql, "data": rows, "cluster":self.get_cluster_metrics()}
 
+
     def get_results(self, sql):
         self.cn_c.execute(sql)
         rows = self.cn_c.fetchall()
         return rows
+
+    def query(self, sql):
+        self.cn_c.execute(sql)
+        self.cn.commit()
+
 
     def get_cluster_metrics(self):
         sql = """
