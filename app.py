@@ -1,3 +1,4 @@
+import sys
 import math
 import time
 import datetime
@@ -60,6 +61,32 @@ def bytes_to_num(s):
         if mm is not None:
             return float(mm.groups(1)[0]) * math.pow(10, 3*(i+1))
     return float(s)
+
+def check_config():
+    try:
+        print "Verifying config.json"
+        with open('config.json', 'r') as config_file:    
+            config = json.load(config_file)
+        print "Successfully read and parsed json"
+    except:
+        print "********** config.json failure **********"
+        e = sys.exc_info()[0]
+        print e
+        return 101
+
+    print "Validating Qumulo cluster API connections"
+    for cluster in config["clusters"]:
+        print "Attempting to connect to: %s with %s login" % (cluster["hostname"], cluster["api_username"])
+        try:
+            apicsv = ApiToCsv(cluster["hostname"], cluster["api_username"], cluster["api_password"], cluster["csv_data_path"])
+            apicsv.get_cluster_status("cluster_status")
+            print "API connection successful"
+        except:
+            print "********** Qumulo Cluster API connection failure **********"
+            e = sys.exc_info()[0]
+            print e            
+            return 102
+    return 0
 
 def get_config():
     with open('config.json', 'r') as config_file:    
@@ -491,7 +518,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     config = get_config()
 
-    if args.op == "api_pull":
+    if args.op == "verify_config":
+        return_val = check_config()
+        if return_val != 0:
+            sys.exit(return_val)
+    elif args.op == "api_pull":
         for cluster in config["clusters"]:
             # initialize Api to CSV.
             apicsv = ApiToCsv(cluster["hostname"], cluster["api_username"], cluster["api_password"], cluster["csv_data_path"])
