@@ -17,8 +17,8 @@ page.viewportSize = {
 };
 
 var config = JSON.parse(fs.read('config.json'));
-
-page.open('http://' + config["url"] + '/?phantom=yes&' + args[1], function(status) {
+console.log("Rendering: " + config["url"] + '/?phantom=yes&' + args[1]);
+page.open(config["url"] + '/?phantom=yes&' + args[1], function(status) {
   console.log("Status: " + status);
   if(status === "success") {
     setTimeout(function() {

@@ -9,6 +9,7 @@ import os
 import subprocess
 import argparse
 import re
+import urlparse
 
 from apitocsv import ApiToCsv
 from sqlitedb import SqliteDb
@@ -383,7 +384,7 @@ def api_alerts():
 
 @app.route('/email')
 def send_email():
-    print "Send email 1!"
+    print "Send email report"
     config = get_config()
 
     cluster_name = flask.request.args.get('cluster_name', get_default_cluster())
@@ -401,10 +402,12 @@ def send_email():
     qs = flask.request.query_string
     cmd.append( qs )
     cmd.append( pdf_name )
+    print "Launch phantomjs"
     p = subprocess.Popen(cmd, stdout = subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             stdin=subprocess.PIPE)
     out,err = p.communicate()
+    print "phantomjs complete"
 
     username = config["email_account"]["account_username"]
     password = config["email_account"]["account_password"]
@@ -447,14 +450,17 @@ def send_email():
         attachFile.add_header('Content-Disposition', 'attachment', filename=os.path.basename(pdf_name))
         msg.attach(attachFile)
 
+    print "Connect to email server"
     if ":465" in config["email_account"]["server"]:
         smtp = smtplib.SMTP_SSL(config["email_account"]["server"])
     else:
         smtp = smtplib.SMTP(config["email_account"]["server"])
+    print "Send email"
     smtp.ehlo()
     smtp.login(username,password)
     smtp.sendmail(fromaddr, toaddrs, msg.as_string())
     smtp.quit()
+    print "Done send email"
 
     return out
 
@@ -542,7 +548,11 @@ if __name__ == '__main__':
             aggregate_data(cluster)
 
     elif args.op == "server":
-        app.run(host='0.0.0.0', port=8555, threaded=True)
+        port = 8080
+        url = urlparse.urlparse(config["url"])
+        if url.port is not None:
+            port = url.port
+        app.run(host='0.0.0.0', port=port, threaded=True)
 
     elif args.op == "alerts":
         check_alerts()
