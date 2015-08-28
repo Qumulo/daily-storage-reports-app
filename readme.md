@@ -17,7 +17,7 @@
 
 ### 1. Install the daily_storage_reports
 ```shell
-git clone git@github.com:Qumulo/daily_storage_reports.git
+git clone https://github.com/Qumulo/daily_storage_reports.git
 ```
 Or, download the zip file (https://github.com/Qumulo/daily_storage_reports/archive/master.zip) and unzip it to your machine where you will be running this tool.
 
