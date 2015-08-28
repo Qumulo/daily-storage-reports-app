@@ -13,5 +13,6 @@
         "from_email_address":"<from email address>",
         "account_username":"<smtp user name (or google/gmail email address)>",
         "account_password":"<smtp password (or google/gmail password)>"
-    }
+    },
+    "url":"<hostname to be used in email links>:8080"
 }

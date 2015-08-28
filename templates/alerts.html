@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">
+<title>{{ title }}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <script src="{{ url_for('static', filename='moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery-ui.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='d3.js') }}"></script>
+    <script src="{{ url_for('static', filename='c3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery.dataTables.min.js') }}"></script>
+
+    <script type="text/javascript" src="//cdn.datatables.net/tabletools/2.2.4/js/dataTables.tableTools.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='dataTables.editor.js') }}"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.6/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/tabletools/2.2.4/css/dataTables.tableTools.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='dataTables.editor.css') }}">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='report-style.css') }}?v=9">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='c3.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='jquery-ui.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}"> 
+    <style>
+    table .btn{
+        display: none !important;
+    }
+
+    table .btn.show{
+        display: inline-block !important;
+
+    }
+
+    th, td{
+        font-size: 0.8em !important;
+    }
+    </style>
+</head>
+<body class="">
+<script>
+var editor = null;
+
+var QueryString = function () {
+  // This function is anonymous, is executed immediately and 
+  // the return value is assigned to QueryString!
+  var query_string = {};
+  var query = window.location.search.substring(1);
+  var vars = query.split("&");
+  for (var i=0;i<vars.length;i++) {
+    var pair = vars[i].split("=");
+        // If first entry with this name
+    if (typeof query_string[pair[0]] === "undefined") {
+      query_string[pair[0]] = pair[1];
+        // If second entry with this name
+    } else if (typeof query_string[pair[0]] === "string") {
+      var arr = [ query_string[pair[0]], pair[1] ];
+      query_string[pair[0]] = arr;
+        // If third or later entry with this name
+    } else {
+      query_string[pair[0]].push(pair[1]);
+    }
+  } 
+    return query_string;
+} ();
+
+
+$(document).ready(function(){
+    editor = new $.fn.dataTable.Editor( {
+        ajax:  '/api-alerts',
+        table: '#data',
+        idSrc: 'alert_id',
+        fields: [
+            { name: 'alert_id', type: 'hidden' },
+            { label: 'Cluster', name: 'cluster' },
+            { label: 'Alert Type',  name: 'alert_type'
+                , type:  "select"
+                , options: ["total used capacity", "used capacity change", "iops" ] },
+            { label: 'Path',  name: 'path'  },
+            { label: 'Expression',  name: 'expr'
+                , type:  "select"
+                , options: [">=", "<=" ] },
+            { label: 'Value',  name: 'val'  },
+            { label: 'Recipients',  name: 'recipients', type:  "textarea" },
+            { label: 'Max Send Count',  name: 'max_send_count'  },
+            { label: 'Send Count',  name: 'send_count'  },
+        ]
+    } );
+
+    $('#data').on( 'click', 'tbody td', function (e) {
+        $("select").off("change");
+        $("input").off("keypress");
+        editor.inline( this, {
+            buttons: { label: '&gt;', fn: function () { this.submit(); } }
+        } );
+
+        $(this).find("select").change(function(){
+            $(".btn").addClass("show")
+        })
+
+        $(this).find("input").keypress(function(){
+            $(".btn").addClass("show")
+        })
+
+    } );
+
+
+    $('#data').DataTable( {
+        ajax: '/api-alerts',
+        dom:  'Tfrtip',
+        columns: [
+            { data: 'alert_id', 'visible': false },
+            { data: 'cluster' },
+            { data: 'alert_type' },
+            { data: 'path' },
+            { data: 'expr' },
+            { data: 'val' },
+            { data: 'recipients'
+                , render: function ( data, type, full, meta ) {
+                    return data.replace(/[,]/g, ",<br />");
+                }
+             },
+            { data: 'max_send_count' },
+            { data: 'send_count' },
+            // etc
+        ],
+        tableTools: {
+            sRowSelect: "os",
+            aButtons: [
+                { sExtends: 'editor_create', editor: editor },
+                { sExtends: 'editor_edit',   editor: editor },
+                { sExtends: 'editor_remove', editor: editor }
+            ]
+        }
+    } );
+
+    if(QueryString.alert_type !== undefined){
+        editor.create( {title: 'Create New Alert', buttons: 'Save'} )
+            .set("cluster", decodeURIComponent(QueryString.cluster_name))
+            .set("path", decodeURIComponent(QueryString.path))
+            .set("val", decodeURIComponent(QueryString.val))
+            .set("max_send_count", 2)
+            .set("send_count", 0)
+            .set("alert_type", decodeURIComponent(QueryString.alert_type))
+            .on("submitSuccess", function(){
+                window.location.href = "/alerts";
+            });
+    }
+
+
+})
+</script>
+<div class="page">
+
+<a href="/" style="padding: 7px; display: block; background-color: #fca; color: rgb(31, 119, 180); width: 220px; right: 10px; position: absolute;">Back to Daily Storage Reports</a>
+<br />
+<br />
+<br />
+<table id="data">
+    <thead>
+            <tr>
+                <th></th>
+                <th>Cluster</th>
+                <th>Alert type</th>
+                <th>Path</th>
+                <th>Expr</th>
+                <th>Value</th>
+                <th>Recipients</th>
+                <th width="5%">Max Send Count</th>
+                <th width="5%">Send Count</th>
+            </tr>
+    </thead>
+
+</table>
+
+</div>
+
+</body>
+</html>

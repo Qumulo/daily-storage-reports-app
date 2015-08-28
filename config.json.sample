@@ -10,8 +10,9 @@
     ],
     "email_account":{
         "server":"smtp.gmail.com:465",
-        "from_email":"tommy@example.com",
+        "from_email_address":"tommy@example.com",
         "account_username":"tommy@example.com",
         "account_password":"pass!@#$"
-    }
+    },
+    "url":"http://dailystoragereports.example.com:8080"
 }

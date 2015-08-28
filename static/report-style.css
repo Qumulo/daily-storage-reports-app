@@ -339,3 +339,19 @@ input{
 .report_url a{
   color: rgb(31, 119, 180);
 }
+
+.alerts_link{
+  text-align: center;
+}
+
+.alerts_link a{
+  color: rgb(31, 119, 180);
+}
+
+#delta_data_table tbody tr td:nth-child(3) .cap_num
+, #delta_data_table tbody tr td:nth-child(4) .cap_chg_num
+, #delta_data_table tbody tr td:nth-child(5) .cap_num
+{
+  cursor: pointer;
+}
+

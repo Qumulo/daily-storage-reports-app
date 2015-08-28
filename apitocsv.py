@@ -91,7 +91,12 @@ class ApiToCsv:
     def get_dashstats(self, table_name, time_inteval_seconds=5):
         api_begin_time = int(time.time()-60*60*25) # 24 hours of data, the max Qumulo stores
 
-        res = self.qumulo_api_call(self.api_cli.stats.time_series_get, begin_time=api_begin_time)
+        # handle multiple api versions
+        try:
+            time_series_get_func = self.api_cli.stats.time_series_get
+        except AttributeError:
+            time_series_get_func = self.api_cli.analytics.time_series_get
+        res = self.qumulo_api_call(time_series_get_func, begin_time=api_begin_time)
         metrics = {"iops.read.rate":"iops_read", "iops.write.rate":"iops_write", "throughput.read.rate":"throughput_read", "throughput.write.rate":"throughput_write"}
         files = {}
         for d in res:
@@ -163,8 +168,13 @@ class ApiToCsv:
 
     #  Get sampled IOPS data 
     def get_iops_by_path(self, table_name):
-        # Pull IOPS data for all types (namespace read/write and file read/writ)
-        res = self.qumulo_api_call(self.api_cli.stats.iops_get)
+        # Pull IOPS data for all types (namespace read/write and file read/write)
+        # Handle multiple API versions
+        try:
+            iops_get_func = self.api_cli.stats.iops_get
+        except AttributeError:
+            iops_get_func = self.api_cli.analytics.iops_get
+        res = self.qumulo_api_call(iops_get_func)
 
         ip_iops = {}
         # Resolve inode ids to file paths
@@ -248,7 +258,7 @@ class ApiToCsv:
         if ent['path'] == '/' and grand_total_capcity == -1:
             grand_total_capcity = float(ent['total_capacity'])
 
-        if float(ent['total_capacity']) / grand_total_capcity >= 0.0001:
+        if float(ent['total_capacity']) / grand_total_capcity >= 0.001:
             data = OrderedDict()
             data["timestamp"]=self.timestamp
             data["levels"]=ent['path'].count ('/')
@@ -263,7 +273,7 @@ class ApiToCsv:
 
         for f in ent['files']:
             full_path = re.sub("[/]+", "/", ent['path'] + f['name'])
-            if float(f['capacity_usage']) / grand_total_capcity >= 0.0001:
+            if float(f['capacity_usage']) / grand_total_capcity >= 0.001:
                 data = OrderedDict()
                 data["timestamp"]=self.timestamp
                 data["levels"]=full_path.count ('/')
@@ -276,6 +286,6 @@ class ApiToCsv:
                     self.add_data(self.datestamp + "-" + table_name+ ".csv" , data)
                     self.files_added[full_path] = 1
 
-            if float(f['capacity_usage']) / grand_total_capcity > 0.0005:
+            if float(f['capacity_usage']) / grand_total_capcity > 0.001:
                 self.get_capacity_by_path(table_name, ent['path'] + f['name'], grand_total_capcity)
 

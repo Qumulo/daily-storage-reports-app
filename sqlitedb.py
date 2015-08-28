@@ -138,6 +138,23 @@ class SqliteDb(object):
             , avg_file_read_iops FLOAT
             , avg_file_write_iops FLOAT
         )
+        """},
+    {
+    "name":"alert_rule",
+    "create_sql":"""
+        CREATE TABLE %(table_name)s (
+            alert_id INTEGER PRIMARY KEY 
+            , created_timestamp DATETIME
+            , alert_type VARCHAR(16)
+            , path VARCHAR(2048)
+            , expr VARCHAR(6) 
+            , val BIGINT
+            , recipients VARCHAR(2048)
+            , send_count INT
+            , max_send_count INT
+            , rule_status INT
+            , last_send_timestamp DATETIME
+        )
         """}
     ]
 
@@ -398,6 +415,16 @@ class SqliteDb(object):
         self.cn_c.execute(sql)
         rows = self.cn_c.fetchall()
         return {"sql": sql, "data": rows, "cluster":self.get_cluster_metrics()}
+
+
+    def get_results(self, sql):
+        self.cn_c.execute(sql)
+        rows = self.cn_c.fetchall()
+        return rows
+
+    def query(self, sql):
+        self.cn_c.execute(sql)
+        self.cn.commit()
 
 
     def get_cluster_metrics(self):

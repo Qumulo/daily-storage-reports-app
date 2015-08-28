@@ -7,6 +7,7 @@
 * cron
 * sqlite3
 * python
+* phantomjs
 * python libraries: flask, argparse, sqlite
 * Qumulo API python library
 * Email smtp server or google apps credentials
@@ -40,7 +41,6 @@ Just run
 
 ```shell
 pip install -r requirements.txt
-
 ```
 
 to install the python prerequisites including the Qumulo REST API
@@ -48,7 +48,7 @@ wrapper.
 
 ### 4. Set up the configuration file
 Edit *config.json*
-1. Add your Qumulo cluster information and credentials as well as the email credentials/server. There are descriptions of all required properties. There is also an example of what a typical config file will look like inside of the *cnofig.json* file.
+1. Add your Qumulo cluster information and credentials as well as the email credentials/server. There are descriptions of all required properties. All settings are required, so make sure to replace all the values in the <> brackets. There is also an example of what a typical config file will look like inside of the *cnofig.json* file.
 
 ### 5. Setup crontab and the intitial data
 Run *setup-crontab.sh* on the command line to install the scheduled data pulls in your crontab.
@@ -65,13 +65,15 @@ python app.py --op server
 
 Once you've launched the web app via step 6 above, you'll have access to the reports interface. If you're running from your local machine, the reports will be located at the URL: http://localhost:8080/ otherwise, replace localhost with the full hostname where you are running the app.
 
-### Menu
 
 #### Filters
 Change the cluster if you have multiple Qumulo clusters. Change path to a path on the cluster to limit the report to that particular path and below. Filter to a particular date range with the calendar or type in a date in the yyyy-mm-dd format.
 
-#### Email
+#### Email Report
 Email a pdf of the current report being viewed. The report will come as an attached pdf and it will be filtered to the current filter settings.
+
+#### Manage Alerts
+Soft quota, email-based alerts can be managed here. Set up alerts based on total used capacity, capacity change, and iops. See "Alerts" section below for more.
 
 ### Capacity Summary
 View the usage of the cluster's storage capacity over time, or for the particular path you are filtered to. The "Last 4 Weeks" metric in the "Growth Per Week" is a weekly average for the last four weeks. If "Last Week" is greater than "Last 4 Weeks", then it means you're capacity usage is accelerating.
@@ -92,3 +94,16 @@ This table shows a detiled breakdown of path metrics for the cluster or filtered
 * Capacity - The capacity used by the directory and its children for the last date of the report. If the capacity column shows "[Deleted]", there is a chance the directory exists, but that it is now smaller than the minimum capacity (0.05% of total used capacity) for tracking over time.
 * Capacity Change - The change in used capacity for the directory and its children between the first and last date of the report.
 * IOPS - The average IOPS for the directory and its children during the date range of the report.
+* **Click on the Capacity, Capacity Change, or IOPS value to set up a new email alert.**
+
+## Alerts
+Alerts are email-based "soft quota" alerts which will notify the email recipient when certain metrics break a threshold. Alerts can be configured on "total used capacity", "used capacity change", and "iops".
+
+Cluster - the cluster name as defined in the config file
+Alert Type - "total used capacity", "used capacity change", and "iops"
+Path - The file path to set the alert on. Cluster-wide alerts would be "/
+Expression - Check whether a value is greater than or less than
+Value - A numeric value. For capacity, units are bytes.
+Recipients - Comma-separated list of email addresses.
+Max Send Count - To limit the number of sends on an alert. If it's 1, only one email alert will get sent. Set it to something larger to get more emails for the same alert.
+Send Count - The number of times an email has been sent for the alert.
