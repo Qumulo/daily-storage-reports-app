@@ -1,3 +1,4 @@
 *.pyc
 data/*
 node_modules/*
+docker/config.json
