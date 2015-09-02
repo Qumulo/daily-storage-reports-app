@@ -32,5 +32,5 @@ docker run -d -p 8080:8080 daily_storage_reports
 
 Your docker host will now be listening on port 8080.
 
-http://<docker host>:8080
+http://[docker_host]:8080
 
