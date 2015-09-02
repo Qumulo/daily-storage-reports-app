@@ -7,6 +7,7 @@
 See:
 *   Linux: http://docs.docker.com/linux/started/
 *   Mac: http://docs.docker.com/mac/started/
+
 ### 2. Create config.json
 ```shell
 cp ../config.json ./config.json
