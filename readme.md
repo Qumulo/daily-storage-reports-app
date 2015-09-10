@@ -44,7 +44,7 @@ pip install -r requirements.txt
 ```
 
 to install the python prerequisites including the Qumulo REST API
-wrapper.
+wrapper.  *NOTE* that the daily_storage_reports sample requires Qumulo REST API version 1.2.9 or later.
 
 ### 4. Set up the configuration file
 Edit *config.json*
