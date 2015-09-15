@@ -54,11 +54,11 @@ class SqliteDb(object):
             timestamp DATETIME
             ,  level INT
             ,  path VARCHAR(2048)
+            ,  total FLOAT
             ,  file_read FLOAT
             ,  file_write FLOAT
             ,  namespace_read FLOAT
             ,  namespace_write FLOAT
-            ,  total FLOAT
         )
         """},
     {
@@ -67,11 +67,12 @@ class SqliteDb(object):
         CREATE TABLE %(table_name)s ( 
             timestamp DATETIME
             , ip VARCHAR(28)
+            , total FLOAT
             , file_read FLOAT
             , file_write FLOAT
             , namespace_read FLOAT
             , namespace_write FLOAT
-            , total FLOAT )
+        )
         """},
     {
     "name":"sampled_files_by_capacity",
@@ -221,7 +222,7 @@ class SqliteDb(object):
             avg(iops_read) iops_read
             , avg(iops_write) iops_write
             , avg(throughput_read) throughput_read
-            , avg(CASE WHEN throughput_write <= 300000000 THEN throughput_write END) throughput_write
+            , avg(throughput_write) throughput_write
             FROM dashstats
             ) e ON 1 = 1
         """
@@ -237,7 +238,7 @@ class SqliteDb(object):
                     , avg(iops_read) iops_read
                     , avg(iops_write) iops_write
                     , avg(throughput_read) throughput_read
-                    , avg(CASE WHEN throughput_write <= 300000000 THEN throughput_write END) throughput_write
+                    , avg(throughput_write) throughput_write
                     FROM dashstats
             GROUP BY strftime('%%Y-%%m-%%d %%H:00:00', timestamp)
             """
