@@ -44,7 +44,7 @@ class SqliteDb(object):
             , total_raw_capacity BIGINT 
             , total_usable_capacity BIGINT
             , total_used_capacity BIGINT
-            , nodes_status VARCHAR(18)
+            , nodes_status VARCHAR(512)
             )
         """},
     {
@@ -293,8 +293,8 @@ class SqliteDb(object):
 
 
     def import_table_for_date(self, table_name, the_date):
-
-        self.cn_c.execute("DELETE FROM %(table_name)s" % {"table_name":table_name})
+        sql = "DELETE FROM %(table_name)s WHERE timestamp >= '%(the_date)s' AND timestamp < datetime('%(the_date)s', '24 HOUR') " % {"table_name":table_name, "the_date":the_date}
+        self.cn_c.execute(sql)
         self.cn.commit()
 
         insert_sql = self.get_insert_sql(table_name)
