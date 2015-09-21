@@ -184,7 +184,12 @@ class SqliteDb(object):
             except sqlite3.OperationalError:
                 # Table already exists
                 pass
- 
+
+    def cleanup(self, tables):
+        for table in tables:
+            self.cn_c.execute("DELETE FROM %(table)s" % {"table":table})
+            self.cn.commit()
+
 
     def get_schemas(self):
         for table in self.tables:
@@ -257,7 +262,8 @@ class SqliteDb(object):
             SELECT COALESCE(level, levels) level, COALESCE(path, inode_path) path, used_capacity, avg_iops, avg_file_read_iops, avg_file_write_iops
             FROM
             (
-            SELECT levels, inode_path, avg(total_capacity) used_capacity FROM capacity_by_path GROUP BY levels, inode_path
+            SELECT levels, inode_path, avg(total_capacity) used_capacity FROM capacity_by_path 
+            GROUP BY levels, inode_path
             ) a
             LEFT JOIN
             (
@@ -281,7 +287,9 @@ class SqliteDb(object):
             ) a
             LEFT JOIN
             (
-            SELECT levels, inode_path, avg(total_capacity) used_capacity FROM capacity_by_path GROUP BY levels, inode_path
+            SELECT levels, inode_path, avg(total_capacity) used_capacity 
+            FROM capacity_by_path 
+            GROUP BY levels, inode_path
             ) b ON inode_path = path
             WHERE b.inode_path IS NULL
             ) t
@@ -293,9 +301,12 @@ class SqliteDb(object):
 
 
     def import_table_for_date(self, table_name, the_date):
-        sql = "DELETE FROM %(table_name)s WHERE timestamp >= '%(the_date)s' AND timestamp < datetime('%(the_date)s', '24 HOUR') " % {"table_name":table_name, "the_date":the_date}
-        self.cn_c.execute(sql)
-        self.cn.commit()
+        del_sql = """DELETE FROM %(table_name)s 
+                WHERE timestamp >= '%(the_date)s' AND timestamp < datetime('%(the_date)s', '24 HOUR') 
+                """ % {"table_name":table_name, "the_date":the_date}
+        if table_name != "cluster_status":
+            self.cn_c.execute(del_sql)
+            self.cn.commit()
 
         insert_sql = self.get_insert_sql(table_name)
         rows_to_insert = []
@@ -334,10 +345,14 @@ class SqliteDb(object):
         sqls = {}
 
         sqls["capacity"] = """
-                select timestamp, MAX(CASE WHEN path = '%(path)s' THEN total_used_capacity ELSE 0 END) total_used_capacity
+                SELECT *
+                FROM (
+                select timestamp, MAX(CASE WHEN path = '%(path)s' THEN total_used_capacity END) total_used_capacity
                 from report_daily_path_metrics 
                 WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
                 GROUP BY 1
+                ) t
+                WHERE total_used_capacity IS NOT NULL
                 ORDER BY 1
         """
 
@@ -434,7 +449,10 @@ class SqliteDb(object):
                 FROM cluster_status 
                 WHERE timestamp = (select max(timestamp) FROM cluster_status);
         """
-        self.cn_c.execute(sql)
-        row = self.cn_c.fetchall()[0]
-        return row
+        row_count = self.cn_c.execute(sql)
+        rows = self.cn_c.fetchall()
+        if len(rows) > 0:
+            return rows[0]
+        else:
+            return -1
 

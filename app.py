@@ -126,6 +126,7 @@ def aggregate_day(db, the_day):
     db.add_report_daily_metrics(the_day)
     db.add_report_hourly_metrics(the_day)
     db.add_report_daily_path_metrics(the_day)
+    db.cleanup(["dashstats", "capacity_by_path", "iops_by_path", "iops_by_client_ip"])
 
 
 def aggregate_data(cluster):
