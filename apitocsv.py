@@ -79,9 +79,14 @@ class ApiToCsv:
 
 
     def get_latest_date_dashstats_file(self, csv_file):
-        if os.path.isfile(self.data_dir + "/" + csv_file):
+        file_path = self.data_dir + "/" + csv_file
+        if os.path.isfile(file_path):
+            f_stats = os.stat(file_path)
+            seek_back = 5000
+            if f_stats.st_size < seek_back:
+                seek_back = f_stats.st_size
             f = open(self.data_dir + "/" + csv_file, "r")
-            f.seek(-5000, os.SEEK_END)
+            f.seek(-seek_back, os.SEEK_END)
             line = f.readlines()[-1]
             return re.search("([^,]*),", line).group(1)
 
