@@ -13,24 +13,29 @@ class ApiToCsv:
 
     api_cli = None
     data_dir = None
-    timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    timestamp = None
     datestamp = None
     username = None
     password = None
 
     ## specific to capcity crawl
-    searched_paths = {}
-    files_added = {}
+    searched_paths = None
+    files_added = None
+    api_call_times = None
 
-    api_call_times = {}
 
     def __init__(self, cluster, username, password, data_dir):
         self.username = username
         self.password = password
+        self.data_dir = data_dir
+        self.timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+        self.datestamp = self.timestamp[:10]
+        self.searched_paths = {}
+        self.files_added = {}
+        self.api_call_times = {}
+        # Initialize rest client
         self.api_cli = RestClient(cluster, 8000)
         self.qumulo_api_call(self.api_cli.login, username=username, password=password)
-        self.data_dir = data_dir
-        self.datestamp = self.timestamp[:10]
 
 
     def set_timestamp(self, new_timestamp):
@@ -263,6 +268,9 @@ class ApiToCsv:
         if ent['path'] == '/' and grand_total_capcity == -1:
             grand_total_capcity = float(ent['total_capacity'])
 
+        if grand_total_capcity == 0:
+            return
+
         if float(ent['total_capacity']) / grand_total_capcity >= 0.001:
             data = OrderedDict()
             data["timestamp"]=self.timestamp
@@ -293,4 +301,5 @@ class ApiToCsv:
 
             if float(f['capacity_usage']) / grand_total_capcity > 0.001:
                 self.get_capacity_by_path(table_name, ent['path'] + f['name'], grand_total_capcity)
+
 
