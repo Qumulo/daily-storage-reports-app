@@ -281,7 +281,7 @@ def mail_it(config, toaddrs_str, text, subject):
     smtp.ehlo()
     smtp.login(username,password)
 
-    smtp.sendmail(fromaddr, [toaddrs_str] + ['tommy@qumulo.com'], msg.as_string())
+    smtp.sendmail(fromaddr, [toaddrs_str], msg.as_string())
     smtp.quit()
 
 
