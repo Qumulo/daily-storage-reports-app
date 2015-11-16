@@ -48,7 +48,7 @@ wrapper.  *NOTE* that the daily_storage_reports sample requires Qumulo REST API 
 
 ### 4. Set up the configuration file
 Edit *config.json*
-1. Add your Qumulo cluster information and credentials as well as the email credentials/server. There are descriptions of all required properties. All settings are required, so make sure to replace all the values in the <> brackets. There is also an example of what a typical config file will look like inside of the *config.json* file.
+1. Add your Qumulo cluster information and credentials as well as the email credentials/server. There are descriptions of all required properties. All settings are required, so make sure to replace all the values in the <> brackets. There is also an example of what a typical config file will look like inside of the *config.json.sample* file.
 
 ### 5. Setup crontab and the intitial data
 Run *setup-crontab.sh* on the command line to install the scheduled data pulls in your crontab.

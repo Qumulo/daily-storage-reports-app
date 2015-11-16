@@ -1,9 +1,16 @@
 {
     "clusters":[
         {"name":"QumuloCluster1", 
-            "sqlite_db_path":"/Users/user/work/testing/qumulo-data.db", 
+            "sqlite_db_path":"/Users/user/work/testing/qumulo-cluster1.db", 
             "csv_data_path":"/Users/user/work/testing/QumuloCluster1",
-            "hostname":"qumulocluster.example.com",
+            "hostname":"qumulocluster1.example.com",
+            "api_username":"apiuser",
+            "api_password":"pass!@#$"
+        },
+        {"name":"QumuloCluster2", 
+            "sqlite_db_path":"/Users/user/work/testing/qumulo-cluster2.db", 
+            "csv_data_path":"/Users/user/work/testing/QumuloCluster2",
+            "hostname":"qumulocluster2.example.com",
             "api_username":"apiuser",
             "api_password":"pass!@#$"
         }
