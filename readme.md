@@ -1,5 +1,17 @@
 # Daily Storage Reports Readme
 
+The Daily Storage Report is a standalone python flask app that uses the Qumulo API, CSVs, and SQLite to report on your Qumulo cluster(s) capacity and activity.
+
+**Daily Storage Report features**:
+
+* View and filter historical capacity and IOPS data.
+* Email PDF reports to people who don't use the web-based interface.
+* Set email alerts (soft quotas) on capacity usage, capacity change, and IOPS.
+* Veiw breakdowns in capacity usage and activity by path across the cluster.
+* Report on multiple Qumulo clusters from one interface.
+* Powered by the Qumulo API.
+
+
 ## Requirements
 
 * Qumulo cluster and API credentials for the cluster
