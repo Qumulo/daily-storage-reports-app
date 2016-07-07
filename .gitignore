@@ -1,4 +1,6 @@
 *.pyc
 data/*
 node_modules/*
+.idea/*
 docker/config.json
+
