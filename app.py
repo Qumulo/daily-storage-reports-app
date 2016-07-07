@@ -279,7 +279,10 @@ def mail_it(config, toaddrs_str, text, subject):
     else:
         smtp = smtplib.SMTP(config["email_account"]["server"])
     smtp.ehlo()
-    smtp.login(username,password)
+
+    # if username and password are blank don't login
+    if username and password:
+        smtp.login(username,password)
 
     smtp.sendmail(fromaddr, [toaddrs_str], msg.as_string())
     smtp.quit()
@@ -458,7 +461,8 @@ def send_email():
         smtp = smtplib.SMTP(config["email_account"]["server"])
     print "Send email"
     smtp.ehlo()
-    smtp.login(username,password)
+    if username and password:
+        smtp.login(username,password)
     smtp.sendmail(fromaddr, toaddrs, msg.as_string())
     smtp.quit()
     print "Done send email"
