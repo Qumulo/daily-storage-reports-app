@@ -75,6 +75,46 @@ Run *setup-crontab.sh* on the command line to install the scheduled data pulls i
 python app.py --op server
 ```
 
+To run in a background thread:
+
+```shell
+nohup python app.py --op server &
+```
+### 7. Supporting multiple users
+
+The [guidance](http://flask.pocoo.org/docs/0.10/deploying/#deployment) from the developers of Flask is that
+you should not deploy your app into production using Flask's built-in webserver; Specifically: 
+they say:
+
+    "You can use the builtin server during development, but you should use a full deployment option for production applications. (Do not use the builtin development server in production.)"
+    
+So for production scenarios you should consider using [uWSGI](http://flask.pocoo.org/docs/0.10/deploying/uwsgi/)
+with ngnx or perhaps [mod_wsgi](http://flask.pocoo.org/docs/0.10/deploying/mod_wsgi/) for Apache environments, or
+another option. For simplicity's sake (easy to get up and running) I'm using [Gunicorn](http://docs.gunicorn.org/en/19.3/),
+ which is another WSGI server.  Starting and running using `gunicorn` is simple:
+ 
+     gunicorn -b 0.0.0.0:8000 -w 4 --threads 4 -t 360 --access-logfile ~/ftt_log.txt manage:app
+     
+will start the server with four workers with four threads per worker at port 8000.
+
+If you want to go uWSGI/nginx route, a good 'how to' document for ubuntu can be found [here](https://www.digitalocean.com/community/tutorials/how-to-serve-flask-applications-with-uwsgi-and-nginx-on-ubuntu-14-04).
+
+Short of creating a WSGI-based deployment, you can run FTT in non-developer/debug mode and support simultaneous users, you 
+should start the server using the following form/command (from http://goo.gl/A3YfNt):
+
+```./manage.py runserver --host 0.0.0.0 --threaded```
+
+or
+
+```./manage.py runserver --host 0.0.0.0 --processes=[n]```
+
+where
+
+```[n]```  is some integer value such as 3,10 etc.  
+
+using ```--host 0.0.0.0``` makes the host visible to other machines.
+
+
 ## About the reports in the web app
 
 Once you've launched the web app via step 6 above, you'll have access to the reports interface. If you're running from your local machine, the reports will be located at the URL: http://localhost:8080/ otherwise, replace localhost with the full hostname where you are running the app.
