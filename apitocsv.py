@@ -136,7 +136,7 @@ class ApiToCsv:
         node_stats = self.qumulo_api_call(self.api_cli.cluster.list_nodes)
         d = OrderedDict()
         d["timestamp"] = self.timestamp
-        d["total_raw_capacity"] = cluster_stats["raw_size_bytes"]
+        d["total_raw_capacity"] = cluster_stats["total_size_bytes"]
         d["total_usable_capacity"] = cluster_stats["total_size_bytes"]
         d["total_used_capacity"] = int(cluster_stats["total_size_bytes"]) - int(cluster_stats["free_size_bytes"])
         d["nodes_status"] = '{' + ','.join(["1" if st["node_status"] == "online" else "0" for st in node_stats]) + '}'
