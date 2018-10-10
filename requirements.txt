@@ -1,4 +1,4 @@
-qumulo_api==1.2.18
+qumulo_api
 Flask>=0.10.1
 argparse>=1.2.1
 python-dateutil>=1.5
