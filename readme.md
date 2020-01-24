@@ -13,6 +13,14 @@ The Daily Storage Report is a standalone python flask app that uses the Qumulo A
 * Report on multiple Qumulo clusters from one interface.
 * Powered by the Qumulo API.
 
+## Screenshots
+
+![Capacity trend graph](/images/capacity-trend.png)
+
+![Directory breakdown graph](/images/directory-breakdown.png)
+
+![Network throughput graph](/images/network-throughput.png)
+
 
 ## Requirements
 
