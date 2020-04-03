@@ -183,7 +183,10 @@ class ApiToCsv:
         try:
             iops_get_func = self.api_cli.stats.iops_get
         except AttributeError:
-            iops_get_func = self.api_cli.analytics.iops_get
+            try:
+                iops_get_func = self.api_cli.analytics.iops_get
+            except AttributeError:
+                iops_get_func = self.api_cli.analytics.current_activity_get
         res = self.qumulo_api_call(iops_get_func)
 
         ip_iops = {}
