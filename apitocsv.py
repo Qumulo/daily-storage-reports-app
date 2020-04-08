@@ -180,6 +180,10 @@ class ApiToCsv:
     def get_iops_by_path(self, table_name):
         # Pull IOPS data for all types (namespace read/write and file read/write)
         # Handle multiple API versions
+        iops_types = OrderedDict([("read","file_read"), 
+                                 ("write","file_write"), 
+                                 ("namespace-read","namespace_read"), 
+                                 ("namespace-write","namespace_write")])
         try:
             iops_get_func = self.api_cli.stats.iops_get
         except AttributeError:
@@ -187,12 +191,15 @@ class ApiToCsv:
                 iops_get_func = self.api_cli.analytics.iops_get
             except AttributeError:
                 iops_get_func = self.api_cli.analytics.current_activity_get
+                iops_types = OrderedDict([("file-iops-read","file_read"), 
+                                          ("file-iops-write","file_write"), 
+                                          ("metadata-iops-read","namespace_read"), 
+                                          ("metadata-iops-write","namespace_write"),
+                                         ])
         res = self.qumulo_api_call(iops_get_func)
-
         ip_iops = {}
         # Resolve inode ids to file paths
         ids = []
-        iops_types = OrderedDict([("read","file_read"), ("write","file_write"), ("namespace-read","namespace_read"), ("namespace-write","namespace_write")])
         for iop in res['entries']:
             ids.append(iop["id"])
         ids = list(set(ids))
@@ -219,7 +226,6 @@ class ApiToCsv:
                 ip_iops[iop['ip']] = data
             ip_iops[iop['ip']]['total'] += iop['rate']
             ip_iops[iop['ip']][iops_types[iop["type"]]] += iop['rate']
-                
 
             path_parts = string.split(id_paths[iop['id']], '/')
 
