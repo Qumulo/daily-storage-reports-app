@@ -227,7 +227,7 @@ class ApiToCsv:
             ip_iops[iop['ip']]['total'] += iop['rate']
             ip_iops[iop['ip']][iops_types[iop["type"]]] += iop['rate']
 
-            path_parts = string.split(id_paths[iop['id']], '/')
+            path_parts = id_paths[iop['id']].split('/')
 
             for ppi in range(1,len(path_parts)):
                 if ppi == 1:
@@ -269,7 +269,7 @@ class ApiToCsv:
         self.searched_paths[start_path] = 1
         # Waiting on the api unicode fix
         try:
-            res = self.qumulo_api_call(self.api_cli.fs.read_dir_aggregates, path=unicode(start_path), recursive=False, max_entries=1000, max_depth=8, order_by="total_blocks")
+            res = self.qumulo_api_call(self.api_cli.fs.read_dir_aggregates, path=str(start_path), recursive=False, max_entries=1000, max_depth=8, order_by="total_blocks")
         except:
             return
 
