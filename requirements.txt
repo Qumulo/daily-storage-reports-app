@@ -1,6 +1,6 @@
 qumulo_api
-Flask>=0.10.1
-argparse>=1.2.1
-python-dateutil>=1.5
-pylint>=1.4.4
+Flask>=1.1.1
+argparse>=1.4.0
+python-dateutil>=2.8.0
+pylint>=1.9.2
 nose>=1.3.7
