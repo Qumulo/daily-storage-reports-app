@@ -54,7 +54,7 @@ sudo apt-get install python3-pip sqlite3 phantomjs
 
 #### On Mac OSX
 ```shell
-brew install python3 sqlite3 phantomjs
+sudo brew install python3 sqlite3 phantomjs
 ```
 
 ### 3. Install the prerequisite python libraries
@@ -62,7 +62,7 @@ brew install python3 sqlite3 phantomjs
 Just run
 
 ```shell
-pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt
 ```
 
 to install the python prerequisites including the Qumulo REST API
