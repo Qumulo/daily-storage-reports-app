@@ -16,7 +16,7 @@ class SqliteDb(object):
     {
     "name":"capacity_by_path",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATETIME
             , levels INT
             , inode_path VARCHAR(2048)
@@ -28,7 +28,7 @@ class SqliteDb(object):
     {
     "name":"dashstats",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATETIME
             ,  iops_read FLOAT
             ,  iops_write FLOAT
@@ -39,9 +39,9 @@ class SqliteDb(object):
     {
     "name":"cluster_status",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATETIME
-            , total_raw_capacity BIGINT 
+            , total_raw_capacity BIGINT
             , total_usable_capacity BIGINT
             , total_used_capacity BIGINT
             , nodes_status VARCHAR(512)
@@ -50,7 +50,7 @@ class SqliteDb(object):
     {
     "name":"iops_by_path",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATETIME
             ,  level INT
             ,  path VARCHAR(2048)
@@ -64,7 +64,7 @@ class SqliteDb(object):
     {
     "name":"iops_by_client_ip",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATETIME
             , ip VARCHAR(28)
             , total FLOAT
@@ -77,7 +77,7 @@ class SqliteDb(object):
     {
     "name":"sampled_files_by_capacity",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATETIME
             , inode_id INT
             , name VARCHAR(2048)
@@ -91,7 +91,7 @@ class SqliteDb(object):
     {
     "name":"sampled_files_by_file",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATETIME
             , inode_id INT
             , name VARCHAR(2048)
@@ -100,16 +100,16 @@ class SqliteDb(object):
             , mode INT
             , last_modified VARCHAR(54)
             , group_id BIGINT
-            , owner_id BIGINT 
+            , owner_id BIGINT
         )
         """},
     {
     "name":"report_daily_metrics",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATE
             , total_used_capacity BIGINT
-            , total_usable_capacity BIGINT 
+            , total_usable_capacity BIGINT
             , avg_read_iops FLOAT
             , avg_write_iops FLOAT
             , avg_read_throughput FLOAT
@@ -119,7 +119,7 @@ class SqliteDb(object):
     {
     "name":"report_hourly_metrics",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATE
             , avg_read_iops FLOAT
             , avg_write_iops FLOAT
@@ -130,7 +130,7 @@ class SqliteDb(object):
     {
     "name":"report_daily_path_metrics",
     "create_sql":"""
-        CREATE TABLE %(table_name)s ( 
+        CREATE TABLE %(table_name)s (
             timestamp DATE
             , path_level
             , path VARCHAR(2048)
@@ -144,11 +144,11 @@ class SqliteDb(object):
     "name":"alert_rule",
     "create_sql":"""
         CREATE TABLE %(table_name)s (
-            alert_id INTEGER PRIMARY KEY 
+            alert_id INTEGER PRIMARY KEY
             , created_timestamp DATETIME
             , alert_type VARCHAR(16)
             , path VARCHAR(2048)
-            , expr VARCHAR(6) 
+            , expr VARCHAR(6)
             , val BIGINT
             , recipients VARCHAR(2048)
             , send_count INT
@@ -209,21 +209,21 @@ class SqliteDb(object):
         sql = """
             INSERT INTO report_daily_metrics
             SELECT '%(d)s', used_capacity, usable_capacity, iops_read, iops_write, throughput_read, throughput_write
-            FROM 
+            FROM
             (
-            select avg(total_capacity) used_capacity 
-            FROM capacity_by_path 
+            select avg(total_capacity) used_capacity
+            FROM capacity_by_path
             WHERE levels=1 AND inode_path='/'
             ) c
-            LEFT JOIN 
+            LEFT JOIN
             (
-            select total_usable_capacity usable_capacity 
-            from cluster_status 
+            select total_usable_capacity usable_capacity
+            from cluster_status
             WHERE timestamp = (select max(timestamp) from cluster_status)
             ) d ON 1 = 1
-            LEFT JOIN 
+            LEFT JOIN
             (
-            SELECT 
+            SELECT
             avg(iops_read) iops_read
             , avg(iops_write) iops_write
             , avg(throughput_read) throughput_read
@@ -262,15 +262,15 @@ class SqliteDb(object):
             SELECT COALESCE(level, levels) level, COALESCE(path, inode_path) path, used_capacity, avg_iops, avg_file_read_iops, avg_file_write_iops
             FROM
             (
-            SELECT levels, inode_path, avg(total_capacity) used_capacity FROM capacity_by_path 
+            SELECT levels, inode_path, avg(total_capacity) used_capacity FROM capacity_by_path
             GROUP BY levels, inode_path
             ) a
             LEFT JOIN
             (
             SELECT level, path
-            , sum(COALESCE(file_read + file_write + namespace_read + namespace_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_iops 
-            , sum(COALESCE(file_read, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_read_iops 
-            , sum(COALESCE(file_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_write_iops 
+            , sum(COALESCE(file_read + file_write + namespace_read + namespace_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_iops
+            , sum(COALESCE(file_read, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_read_iops
+            , sum(COALESCE(file_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_write_iops
             FROM iops_by_path GROUP BY level, path
             ) b ON inode_path = path
 
@@ -280,15 +280,15 @@ class SqliteDb(object):
             FROM
             (
             SELECT level, path
-            , sum(COALESCE(file_read + file_write + namespace_read + namespace_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_iops 
-            , sum(COALESCE(file_read, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_read_iops 
-            , sum(COALESCE(file_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_write_iops 
+            , sum(COALESCE(file_read + file_write + namespace_read + namespace_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_iops
+            , sum(COALESCE(file_read, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_read_iops
+            , sum(COALESCE(file_write, 0)) / (SELECT count(distinct timestamp) cnt FROM iops_by_path) avg_file_write_iops
             FROM iops_by_path GROUP BY level, path
             ) a
             LEFT JOIN
             (
-            SELECT levels, inode_path, avg(total_capacity) used_capacity 
-            FROM capacity_by_path 
+            SELECT levels, inode_path, avg(total_capacity) used_capacity
+            FROM capacity_by_path
             GROUP BY levels, inode_path
             ) b ON inode_path = path
             WHERE b.inode_path IS NULL
@@ -301,8 +301,8 @@ class SqliteDb(object):
 
 
     def import_table_for_date(self, table_name, the_date):
-        del_sql = """DELETE FROM %(table_name)s 
-                WHERE timestamp >= '%(the_date)s' AND timestamp < datetime('%(the_date)s', '24 HOUR') 
+        del_sql = """DELETE FROM %(table_name)s
+                WHERE timestamp >= '%(the_date)s' AND timestamp < datetime('%(the_date)s', '24 HOUR')
                 """ % {"table_name":table_name, "the_date":the_date}
         if table_name != "cluster_status":
             self.cn_c.execute(del_sql)
@@ -315,12 +315,12 @@ class SqliteDb(object):
         for f_name in files:
             with open(f_name) as csv_file:
                 csv_reader = csv.reader(csv_file)
-                csv_reader.next()
+                next(csv_reader)
                 row_count = 0
                 for row in csv_reader:
                     if len(row) == 0 or len(row) != len(self.schemas[table_name]):
                         continue
-                    rows_to_insert.append([unicode(cell if cell is not None else '', 'utf-8') for cell in row])
+                    rows_to_insert.append([str(cell if cell is not None else '') for cell in row])
                     row_count += 1
                     # batches of 1000 records
                     if row_count % 1000 == 0:
@@ -348,7 +348,7 @@ class SqliteDb(object):
                 SELECT *
                 FROM (
                 select timestamp, MAX(CASE WHEN path = '%(path)s' THEN total_used_capacity END) total_used_capacity
-                from report_daily_path_metrics 
+                from report_daily_path_metrics
                 WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
                 GROUP BY 1
                 ) t
@@ -359,7 +359,7 @@ class SqliteDb(object):
         sqls["iops"] = """
                 select timestamp
                 , MAX(CASE WHEN path = '%(path)s' THEN round(avg_iops) ELSE 0 END) avg_iops
-                from report_daily_path_metrics 
+                from report_daily_path_metrics
                 WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
                 GROUP BY 1
                 ORDER BY 1
@@ -369,7 +369,7 @@ class SqliteDb(object):
                 select timestamp
                 , MAX(CASE WHEN path = '%(path)s' THEN round(avg_file_read_iops) ELSE 0 END) avg_file_read_iops
                 , MAX(CASE WHEN path = '%(path)s' THEN round(avg_file_write_iops) ELSE 0 END) avg_file_write_iops
-                from report_daily_path_metrics 
+                from report_daily_path_metrics
                 WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
                 GROUP BY 1
                 ORDER BY 1
@@ -381,7 +381,7 @@ class SqliteDb(object):
                 , avg(avg_write_throughput) avg_write_throughput
                 , max(avg_read_throughput) max_read_throughput
                 , max(avg_write_throughput) max_write_throughput
-                from report_hourly_metrics 
+                from report_hourly_metrics
                 WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s 23:59:59'
                 GROUP BY 1
                 ORDER BY 1
@@ -394,23 +394,23 @@ class SqliteDb(object):
             FROM
             (
             SELECT path_level, path, sum(avg_iops) sum_iops
-            FROM report_daily_path_metrics 
+            FROM report_daily_path_metrics
             WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
             GROUP BY 1, 2
             ) t
             JOIN (
             select count(distinct timestamp) timestamp_count
-            FROM report_daily_path_metrics 
+            FROM report_daily_path_metrics
             WHERE timestamp BETWEEN '%(start_date)s' AND '%(end_date)s'
             ) ts ON timestamp_count > 0
             LEFT JOIN (
             SELECT path, total_used_capacity
-            FROM report_daily_path_metrics 
+            FROM report_daily_path_metrics
             WHERE timestamp = '%(start_date)s'
             ) t0 ON t0.path = t.path
             LEFT JOIN (
             SELECT path, total_used_capacity
-            FROM report_daily_path_metrics 
+            FROM report_daily_path_metrics
             WHERE timestamp = '%(end_date)s'
             ) t1 ON t1.path = t.path
             WHERE t.path LIKE '%(path)s%%'
@@ -419,7 +419,7 @@ class SqliteDb(object):
         """
 
         sqls["date_range"] = """
-            select min(timestamp) start_date, max(timestamp) end_date 
+            select min(timestamp) start_date, max(timestamp) end_date
             from report_daily_path_metrics
         """
 
@@ -445,8 +445,8 @@ class SqliteDb(object):
 
     def get_cluster_metrics(self):
         sql = """
-                select total_usable_capacity 
-                FROM cluster_status 
+                select total_usable_capacity
+                FROM cluster_status
                 WHERE timestamp = (select max(timestamp) FROM cluster_status);
         """
         row_count = self.cn_c.execute(sql)
