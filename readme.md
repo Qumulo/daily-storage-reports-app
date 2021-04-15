@@ -2,7 +2,7 @@
 
 The Daily Storage Report is a standalone python flask app that uses the Qumulo API, CSVs, and SQLite to report on your Qumulo cluster(s) capacity and activity.
 
-**NOTE** Daily Storage Reports requires **Python Version 2.7**
+**NOTE** Daily Storage Reports requires **Python Version 3.4.11**
 
 **Daily Storage Report features**:
 
@@ -28,7 +28,7 @@ The Daily Storage Report is a standalone python flask app that uses the Qumulo A
 * Linux or Mac with continuous access to the Qumulo cluster
 * cron
 * sqlite3
-* python
+* python3
 * phantomjs
 * python libraries: flask, argparse, sqlite
 * Qumulo API python library
@@ -49,12 +49,12 @@ We currently support Linux or MacOSX for running the Daily Storage Reports. In s
 
 #### On Linux (Ubuntu)
 ```shell
-sudo apt-get install python-pip sqlite3 phantomjs
+sudo apt-get install python3-pip sqlite3 phantomjs
 ```
 
 #### On Mac OSX
 ```shell
-brew install python sqlite3 phantomjs
+brew install python3 sqlite3 phantomjs
 ```
 
 ### 3. Install the prerequisite python libraries
@@ -62,11 +62,11 @@ brew install python sqlite3 phantomjs
 Just run
 
 ```shell
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 to install the python prerequisites including the Qumulo REST API
-wrapper.  *NOTE* that the daily_storage_reports sample requires Qumulo REST API version 1.2.9 or later.
+wrapper.  *NOTE* that the daily_storage_reports sample requires Qumulo REST API version 4.0.0 or later.
 
 ### 4. Set up the configuration file
 Edit *config.json*
@@ -80,13 +80,13 @@ Run *setup-crontab.sh* on the command line to install the scheduled data pulls i
 
 ### 6. Run the web app
 ```shell
-python app.py --op server
+python3 app.py --op server
 ```
 
 To run in a background thread:
 
 ```shell
-nohup python app.py --op server &
+nohup python3 app.py --op server &
 ```
 ### 7. Supporting multiple users
 
