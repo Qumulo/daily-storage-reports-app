@@ -7,6 +7,7 @@ import string
 import dateutil.parser
 
 from collections import OrderedDict
+import qumulo.rest_client
 from qumulo.rest_client import RestClient
 
 class ApiToCsv:
@@ -34,7 +35,7 @@ class ApiToCsv:
         self.files_added = {}
         self.api_call_times = {}
         # Initialize rest client
-        self.api_cli = RestClient(cluster, 8000)
+        self.api_cli = qumulo.rest_client.RestClient(cluster, 8000)
         self.qumulo_api_call(self.api_cli.login, username=username, password=password)
 
 
