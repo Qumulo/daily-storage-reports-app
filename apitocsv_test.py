@@ -113,10 +113,9 @@ class ApiToCsvTest(unittest.TestCase):
 
         [csv_path] = [path for path in os.listdir(os.getcwd()) if path.endswith('.csv')]
         with open(csv_path, 'r') as csv_file:
-            self.assertEqual(
-                csv_file.read(),
-                'timestamp,iops_read,iops_write\n2017-07-13 19:40:00,0.5,8\n'
-            )
+            data = csv_file.read()
+            self.assertIn('timestamp,iops_read,iops_write', data)
+            self.assertIn(',0.5,8\n', data)
 
     def test_get_cluster_status(self, rest_client_mock):
         atc = self.setup_test(rest_client_mock)
