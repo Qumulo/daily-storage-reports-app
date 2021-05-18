@@ -224,13 +224,24 @@ def check_alerts():
                 db.query(upd_sql)
                 for email in alert["recipients"].split(","):
                     if email not in recipients:
-                        recipients[email] = [{"subject":alert["alert_type"] + " on " + config["name"], "body":build_alert_email(db, config, alert, filtered_rows)}]
+                        recipients[email] = [{
+                            "subject":alert["alert_type"] + " on " + config["name"],
+                            "body":build_alert_email(db, config, alert, filtered_rows)
+                        }]
                     else:
-                        recipients[email].append({"subject":alert["alert_type"] + " on " + config["name"], "body":build_alert_email(db, config, alert, filtered_rows)})
+                        recipients[email].append({
+                            "subject":alert["alert_type"] + " on " + config["name"],
+                            "body":build_alert_email(db, config, alert, filtered_rows)
+                        })
 
     for email in recipients:
         print("Send email: " + email + " - " + ', '.join(d["subject"] for d in recipients[email]))
-        mail_it(configs, str(email).strip(), '<br/>\r\n'.join(d["body"] for d in recipients[email]) + "<br /><br />To manage your alerts, click here: " + configs["url"] + "/alerts", "Qumulo Quota Alert: " + ', '.join(d["subject"] for d in recipients[email]))
+        mail_it(
+            configs,
+            str(email).strip(),
+            '<br/>\r\n'.join(d["body"] for d in recipients[email]) + "<br /><br />To manage your alerts, click here: " + configs["url"] + "/alerts",
+            "Qumulo Quota Alert: " + ', '.join(d["subject"] for d in recipients[email])
+        )
 
 
 
@@ -520,13 +531,27 @@ def show_index():
                             , request_url=re.sub("(to|phantom)=[^&]+[&]*", "", flask.request.url)
                             , title="Qumulo Storage Status Report")
 
-
-if __name__ == '__main__':
+def main(args):
     parser = argparse.ArgumentParser(description='Bring data from Qumulo Rest API to a CSV')
-    parser.add_argument('--op', required=True, help='Operation for application. Valid values: server or api_pull or aggregate_data')
-    parser.add_argument('--api_data', required=False, help='API data type(s) to pull (separate multiple by commas). Valid values:\ndashstats\ncluster_status\nsampled_files_by_capacity\nsampled_files_by_file\niops_by_path\ncapacity_by_path\napi_call_log')
-    parser.add_argument('--timestamp', default=time.strftime('%Y-%m-%d %H:%M:%S'))
-    args = parser.parse_args()
+    parser.add_argument(
+        '--op',
+        required=True,
+        help='Operation for application',
+        choices=['verify_config', 'api_pull', 'aggregate_data', 'server', 'alerts']
+    )
+    parser.add_argument(
+        '--api-data',
+        required=False,
+        help='API data type(s) to pull',
+        nargs='+',
+        choices=[
+            'dashstats', 'cluster_status', 'sampled_files_by_capacity', 'sampled_files_by_file', 'iops_by_path', 'capacity_by_path', 'api_call_log'
+        ]
+    )
+    parser.add_argument(
+        '--timestamp', default=time.strftime('%Y-%m-%d %H:%M:%S')
+    )
+    args = parser.parse_args(args)
     config = get_config()
 
     if args.op == "verify_config":
@@ -538,11 +563,11 @@ if __name__ == '__main__':
             # initialize Api to CSV.
             apicsv = ApiToCsv(cluster["hostname"], cluster["api_username"], cluster["api_password"], cluster["csv_data_path"])
 
-            # set the timestamp for writign to CSVs where the API doesn't provide a timettamp
+            # set the timestamp for writing to CSVs where the API doesn't provide a timettamp
             apicsv.set_timestamp(args.timestamp)
 
             # loop through each API call operation
-            for api_call in args.api_data.split(','):
+            for api_call in args.api_data:
                 apicsv.get_data(api_call)
 
         # log the api call times to a csv upon completion of all work.
@@ -562,5 +587,6 @@ if __name__ == '__main__':
     elif args.op == "alerts":
         check_alerts()
 
-
+if __name__ == '__main__':
+    main(sys.argv[1:])
 
