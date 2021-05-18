@@ -442,7 +442,6 @@ class SqliteDb(object):
         self.cn_c.execute(sql)
         self.cn.commit()
 
-
     def get_cluster_metrics(self):
         sql = """
                 select total_usable_capacity
