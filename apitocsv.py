@@ -7,6 +7,7 @@ import string
 import dateutil.parser
 
 from collections import OrderedDict
+import qumulo.rest_client
 from qumulo.rest_client import RestClient
 
 class ApiToCsv:
@@ -34,7 +35,7 @@ class ApiToCsv:
         self.files_added = {}
         self.api_call_times = {}
         # Initialize rest client
-        self.api_cli = RestClient(cluster, 8000)
+        self.api_cli = qumulo.rest_client.RestClient(cluster, 8000)
         self.qumulo_api_call(self.api_cli.login, username=username, password=password)
 
 
@@ -50,21 +51,21 @@ class ApiToCsv:
         csv_full_path = self.data_dir + "/" + csv_file
         if os.path.isfile(csv_full_path):
             file_exists = True
-        f = open(csv_full_path, "ab")
+        f = open(csv_full_path, "a")
         csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         if not file_exists:
             csv_writer.writerow(d.keys())
-        csv_writer.writerow([unicode(s).encode("utf-8") for s in d.values()])    
+        csv_writer.writerow(d.values())
         f.close()
 
 
     def qumulo_api_call(self, f, **kwargs):
-        start = time.clock()
+        start = time.process_time()
         res = f(**kwargs)
         f_name = str(f.__name__)
         if f_name not in self.api_call_times:
             self.api_call_times[f_name] = []
-        self.api_call_times[f_name].append((time.clock() - start)*1000)
+        self.api_call_times[f_name].append((time.process_time() - start)*1000)
         return res
 
     def get_api_call_log(self, table_name):
@@ -78,7 +79,7 @@ class ApiToCsv:
 
 
     def get_data(self, api_call_name):
-        print time.strftime('%Y-%m-%d %H:%M:%S') + " - Pulling csv data for: " + api_call_name
+        print(time.strftime('%Y-%m-%d %H:%M:%S') + " - Pulling csv data for: " + api_call_name)
         f = getattr(self, 'get_' + api_call_name)
         f(api_call_name)
 
@@ -90,10 +91,10 @@ class ApiToCsv:
             seek_back = 5000
             if f_stats.st_size < seek_back:
                 seek_back = f_stats.st_size
-            f = open(self.data_dir + "/" + csv_file, "r")
+            f = open(self.data_dir + "/" + csv_file, "rb")
             f.seek(-seek_back, os.SEEK_END)
             line = f.readlines()[-1]
-            return re.search("([^,]*),", line).group(1)
+            return re.search(b"([^,]*),", line).group(1).decode()
 
         return "2000-01-01 00:00:00"
 
@@ -176,13 +177,13 @@ class ApiToCsv:
         self.get_sampled_files(table_name, "capacity", start_dir, sample_count)
 
 
-    #  Get sampled IOPS data 
+    #  Get sampled IOPS data
     def get_iops_by_path(self, table_name):
         # Pull IOPS data for all types (namespace read/write and file read/write)
         # Handle multiple API versions
-        iops_types = OrderedDict([("read","file_read"), 
-                                 ("write","file_write"), 
-                                 ("namespace-read","namespace_read"), 
+        iops_types = OrderedDict([("read","file_read"),
+                                 ("write","file_write"),
+                                 ("namespace-read","namespace_read"),
                                  ("namespace-write","namespace_write")])
         try:
             iops_get_func = self.api_cli.stats.iops_get
@@ -191,9 +192,9 @@ class ApiToCsv:
                 iops_get_func = self.api_cli.analytics.iops_get
             except AttributeError:
                 iops_get_func = self.api_cli.analytics.current_activity_get
-                iops_types = OrderedDict([("file-iops-read","file_read"), 
-                                          ("file-iops-write","file_write"), 
-                                          ("metadata-iops-read","namespace_read"), 
+                iops_types = OrderedDict([("file-iops-read","file_read"),
+                                          ("file-iops-write","file_write"),
+                                          ("metadata-iops-read","namespace_read"),
                                           ("metadata-iops-write","namespace_write"),
                                          ])
         res = self.qumulo_api_call(iops_get_func)
@@ -227,7 +228,7 @@ class ApiToCsv:
             ip_iops[iop['ip']]['total'] += iop['rate']
             ip_iops[iop['ip']][iops_types[iop["type"]]] += iop['rate']
 
-            path_parts = string.split(id_paths[iop['id']], '/')
+            path_parts = id_paths[iop['id']].split('/')
 
             for ppi in range(1,len(path_parts)):
                 if ppi == 1:
@@ -250,12 +251,12 @@ class ApiToCsv:
 
             total_iops += iop['rate']
 
-        for k, v in all_iops.iteritems():
+        for k, v in all_iops.items():
             if v['total'] > total_iops * 0.01:
                 self.add_data(self.datestamp + "-" + table_name + ".csv", v)
 
         # a little bonus!
-        for k, v in ip_iops.iteritems():
+        for k, v in ip_iops.items():
             if v['total'] > total_iops * 0.005:
                 self.add_data(self.datestamp + "-iops_by_client_ip.csv", v)
 
@@ -269,7 +270,7 @@ class ApiToCsv:
         self.searched_paths[start_path] = 1
         # Waiting on the api unicode fix
         try:
-            res = self.qumulo_api_call(self.api_cli.fs.read_dir_aggregates, path=unicode(start_path), recursive=False, max_entries=1000, max_depth=8, order_by="total_blocks")
+            res = self.qumulo_api_call(self.api_cli.fs.read_dir_aggregates, path=str(start_path), recursive=False, max_entries=1000, max_depth=8, order_by="total_blocks")
         except:
             return
 

@@ -9,17 +9,17 @@ import os
 import subprocess
 import argparse
 import re
-import urlparse
 
 from apitocsv import ApiToCsv
 from sqlitedb import SqliteDb
 from dateutil.parser import parse
 from flask import url_for
+from urllib.parse import urlparse
 
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
-from email.MIMEMultipart import MIMEMultipart
-from email import Encoders
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email import encoders
 
 app = flask.Flask(__name__)
 
@@ -48,7 +48,7 @@ def nice_bytes(n):
     pres = ["", "K", "M", "G", "T", "P"]
     if n < 1000:
         return sign + str(n) + " B"
-    
+
     for i in range(0, len(pres)):
         if n >= math.pow(10, i*3) and n < math.pow(10, i*3+3):
             return sign + "{:.2f}".format(n / math.pow(10, i*3)) + " " + pres[i] + "B";
@@ -65,32 +65,32 @@ def bytes_to_num(s):
 
 def check_config():
     try:
-        print "Verifying config.json"
-        with open('config.json', 'r') as config_file:    
+        print("Verifying config.json")
+        with open('config.json', 'r') as config_file:
             config = json.load(config_file)
-        print "Successfully read and parsed json"
+        print("Successfully read and parsed json")
     except:
-        print "********** config.json failure **********"
+        print("********** config.json failure **********")
         e = sys.exc_info()[0]
-        print e
+        print(e)
         return 101
 
-    print "Validating Qumulo cluster API connections"
+    print("Validating Qumulo cluster API connections")
     for cluster in config["clusters"]:
-        print "Attempting to connect to: %s with %s login" % (cluster["hostname"], cluster["api_username"])
+        print("Attempting to connect to: %s with %s login" % (cluster["hostname"], cluster["api_username"]))
         try:
             apicsv = ApiToCsv(cluster["hostname"], cluster["api_username"], cluster["api_password"], cluster["csv_data_path"])
             apicsv.get_cluster_status("cluster_status")
-            print "API connection successful"
+            print("API connection successful")
         except:
-            print "********** Qumulo Cluster API connection failure **********"
+            print("********** Qumulo Cluster API connection failure **********")
             e = sys.exc_info()[0]
-            print e            
+            print(e)
             return 102
     return 0
 
 def get_config():
-    with open('config.json', 'r') as config_file:    
+    with open('config.json', 'r') as config_file:
         config = json.load(config_file)
         return config
 
@@ -112,7 +112,7 @@ def get_default_cluster():
     return clusters[0]["name"]
 
 def aggregate_day(db, the_day):
-    print time.strftime('%H:%M:%S') + " - Aggregating day: " + the_day
+    print(time.strftime('%H:%M:%S') + " - Aggregating day: " + the_day)
     # get the most recent cluster status entries.
 
     db.import_table_for_date("dashstats", the_day)
@@ -155,11 +155,11 @@ def check_alerts():
     sqls = {}
 
     sqls["iops"] = """
-        SELECT * 
-        FROM (select path, level, round(sum(file_read+file_write+namespace_read+namespace_write)/60) val 
-        FROM iops_by_path 
-        WHERE timestamp >= datetime('%(now)s', '-1 hour') 
-        group by 1, 2) t 
+        SELECT *
+        FROM (select path, level, round(sum(file_read+file_write+namespace_read+namespace_write)/60) val
+        FROM iops_by_path
+        WHERE timestamp >= datetime('%(now)s', '-1 hour')
+        group by 1, 2) t
         WHERE val %(expr)s %(val)s
         AND path = '%(path)s'
         ORDER BY level
@@ -178,7 +178,7 @@ def check_alerts():
         HAVING SUM(CASE WHEN timestamp = '%(today)s' AND COALESCE(total_used_capacity, 0) > 0 THEN 1 ELSE 0 END) > 0
         ) t
         WHERE val %(expr)s %(val)s
-        AND path = '%(path)s'        
+        AND path = '%(path)s'
     """
 
     sqls["total used capacity"] = """
@@ -201,7 +201,7 @@ def check_alerts():
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     recipients = {}
     for config in configs["clusters"]:
-        print "Checking alerts for: " + config["name"]
+        print("Checking alerts for: " + config["name"])
         db = SqliteDb(config["sqlite_db_path"], config["csv_data_path"])
         db.create_tables()
         db.get_schemas()
@@ -213,7 +213,7 @@ def check_alerts():
             alert["today"] = datetime.datetime.now().strftime("%Y-%m-%d")
             alert["expr_inv"] = "<" if alert["expr"] == ">=" else ">"
             sql = sqls[alert["alert_type"]] % alert
-            print re.sub("[\r\n]+", " ", sql)
+            print(re.sub("[\r\n]+", " ", sql))
             filtered_rows = db.get_results(sql)
             if len(filtered_rows) > 0:
                 upd_sql = """UPDATE alert_rule
@@ -224,20 +224,31 @@ def check_alerts():
                 db.query(upd_sql)
                 for email in alert["recipients"].split(","):
                     if email not in recipients:
-                        recipients[email] = [{"subject":alert["alert_type"] + " on " + config["name"], "body":build_alert_email(db, config, alert, filtered_rows)}]
+                        recipients[email] = [{
+                            "subject":alert["alert_type"] + " on " + config["name"],
+                            "body":build_alert_email(db, config, alert, filtered_rows)
+                        }]
                     else:
-                        recipients[email].append({"subject":alert["alert_type"] + " on " + config["name"], "body":build_alert_email(db, config, alert, filtered_rows)})
+                        recipients[email].append({
+                            "subject":alert["alert_type"] + " on " + config["name"],
+                            "body":build_alert_email(db, config, alert, filtered_rows)
+                        })
 
     for email in recipients:
-        print "Send email: " + email + " - " + ', '.join(d["subject"] for d in recipients[email])
-        mail_it(configs, str(email).strip(), '<br/>\r\n'.join(d["body"] for d in recipients[email]) + "<br /><br />To manage your alerts, click here: " + configs["url"] + "/alerts", "Qumulo Quota Alert: " + ', '.join(d["subject"] for d in recipients[email]))
+        print("Send email: " + email + " - " + ', '.join(d["subject"] for d in recipients[email]))
+        mail_it(
+            configs,
+            str(email).strip(),
+            '<br/>\r\n'.join(d["body"] for d in recipients[email]) + "<br /><br />To manage your alerts, click here: " + configs["url"] + "/alerts",
+            "Qumulo Quota Alert: " + ', '.join(d["subject"] for d in recipients[email])
+        )
 
 
 
 def build_alert_email(db, config, alert, rows):
     msg = "The <b>%(alert_type)s</b> on the <b>%(cluster)s</b> cluster for the <b>%(path)s</b> path %(isare)s <b>%(direction)s %(threshold)s</b> (currently: <b>%(val)s</b>)" % {
-        "alert_type": alert["alert_type"], 
-        "cluster": config["name"], 
+        "alert_type": alert["alert_type"],
+        "cluster": config["name"],
         "path": alert["path"],
         "isare": "are" if alert["alert_type"] == "iops" else "is",
         "direction":"above" if alert["expr"] == ">=" else "below",
@@ -354,14 +365,14 @@ def api_alerts():
             elif flask.request.form['action'] == "edit":
                 fd = flask.request.form
                 id_parts = fd['id'].split("|")
-                upd_sql = """update alert_rule 
+                upd_sql = """update alert_rule
                         set alert_type = '%s'
                         , path = '%s'
                         , expr = '%s'
                         , val = %s
                         , recipients = '%s'
                         , max_send_count = %s
-                        , send_count = %s 
+                        , send_count = %s
                         WHERE alert_id in (%s)""" % (
                             fd["data[alert_type]"]
                             , fd["data[path]"]
@@ -388,7 +399,7 @@ def api_alerts():
 
 @app.route('/email')
 def send_email():
-    print "Send email report"
+    print("Send email report")
     config = get_config()
 
     cluster_name = flask.request.args.get('cluster_name', get_default_cluster())
@@ -406,12 +417,12 @@ def send_email():
     qs = flask.request.query_string
     cmd.append( qs )
     cmd.append( pdf_name )
-    print "Launch phantomjs"
+    print("Launch phantomjs")
     p = subprocess.Popen(cmd, stdout = subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             stdin=subprocess.PIPE)
     out,err = p.communicate()
-    print "phantomjs complete"
+    print("phantomjs complete")
 
     username = config["email_account"]["account_username"]
     password = config["email_account"]["account_password"]
@@ -450,22 +461,22 @@ def send_email():
     with open(pdf_name, "rb") as fil:
         attachFile = MIMEBase('application', 'pdf')
         attachFile.set_payload(fil.read())
-        Encoders.encode_base64(attachFile)
+        encoders.encode_base64(attachFile)
         attachFile.add_header('Content-Disposition', 'attachment', filename=os.path.basename(pdf_name))
         msg.attach(attachFile)
 
-    print "Connect to email server"
+    print("Connect to email server")
     if ":465" in config["email_account"]["server"]:
         smtp = smtplib.SMTP_SSL(config["email_account"]["server"])
     else:
         smtp = smtplib.SMTP(config["email_account"]["server"])
-    print "Send email"
+    print("Send email")
     smtp.ehlo()
     if username and password:
         smtp.login(username,password)
     smtp.sendmail(fromaddr, toaddrs, msg.as_string())
     smtp.quit()
-    print "Done send email"
+    print("Done send email")
 
     return out
 
@@ -520,13 +531,27 @@ def show_index():
                             , request_url=re.sub("(to|phantom)=[^&]+[&]*", "", flask.request.url)
                             , title="Qumulo Storage Status Report")
 
-
-if __name__ == '__main__':
+def main(args):
     parser = argparse.ArgumentParser(description='Bring data from Qumulo Rest API to a CSV')
-    parser.add_argument('--op', required=True, help='Operation for application. Valid values: server or api_pull or aggregate_data')
-    parser.add_argument('--api_data', required=False, help='API data type(s) to pull (separate multiple by commas). Valid values:\ndashstats\ncluster_status\nsampled_files_by_capacity\nsampled_files_by_file\niops_by_path\ncapacity_by_path\napi_call_log')
-    parser.add_argument('--timestamp', default=time.strftime('%Y-%m-%d %H:%M:%S'))
-    args = parser.parse_args()
+    parser.add_argument(
+        '--op',
+        required=True,
+        help='Operation for application',
+        choices=['verify_config', 'api_pull', 'aggregate_data', 'server', 'alerts']
+    )
+    parser.add_argument(
+        '--api-data',
+        required=False,
+        help='API data type(s) to pull',
+        nargs='+',
+        choices=[
+            'dashstats', 'cluster_status', 'sampled_files_by_capacity', 'sampled_files_by_file', 'iops_by_path', 'capacity_by_path', 'api_call_log'
+        ]
+    )
+    parser.add_argument(
+        '--timestamp', default=time.strftime('%Y-%m-%d %H:%M:%S')
+    )
+    args = parser.parse_args(args)
     config = get_config()
 
     if args.op == "verify_config":
@@ -538,11 +563,11 @@ if __name__ == '__main__':
             # initialize Api to CSV.
             apicsv = ApiToCsv(cluster["hostname"], cluster["api_username"], cluster["api_password"], cluster["csv_data_path"])
 
-            # set the timestamp for writign to CSVs where the API doesn't provide a timettamp
+            # set the timestamp for writing to CSVs where the API doesn't provide a timettamp
             apicsv.set_timestamp(args.timestamp)
 
             # loop through each API call operation
-            for api_call in args.api_data.split(','):
+            for api_call in args.api_data:
                 apicsv.get_data(api_call)
 
         # log the api call times to a csv upon completion of all work.
@@ -554,7 +579,7 @@ if __name__ == '__main__':
 
     elif args.op == "server":
         port = 8080
-        url = urlparse.urlparse(config["url"])
+        url = urlparse(config["url"])
         if url.port is not None:
             port = url.port
         app.run(host='0.0.0.0', port=port, threaded=True)
@@ -562,5 +587,6 @@ if __name__ == '__main__':
     elif args.op == "alerts":
         check_alerts()
 
-
+if __name__ == '__main__':
+    main(sys.argv[1:])
 

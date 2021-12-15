@@ -2,7 +2,7 @@ FROM ubuntu:trusty
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get -yq install \
-    cron wget python-pip sqlite3 phantomjs unzip
+    cron wget python3-pip sqlite3 phantomjs unzip
 
 RUN mkdir /app && \
     cd /tmp && \
@@ -10,7 +10,7 @@ RUN mkdir /app && \
     cd /app && \
     unzip /tmp/master.zip -d /app && \
     rm -f /tmp/master.zip && \
-    pip install -r /app/daily-storage-reports-app-master/requirements.txt
+    pip3 install -r /app/daily-storage-reports-app-master/requirements.txt
 
 ADD config.json /app/daily-storage-reports-app-master/config.json
 ADD run.sh /run.sh
