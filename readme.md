@@ -1,8 +1,8 @@
-# Daily Storage Reports Readme
-
 # Deprecation Notice
 
-This software will shortly be deprecated and archived. If you have any issues, please reach out to [Michael Kade](mailto:mkade@qumulo.com) directly.
+**This software will shortly be deprecated and archived. If you have any issues, please reach out to [Michael Kade](mailto:mkade@qumulo.com) directly.**
+
+# Daily Storage Reports
 
 The Daily Storage Report is a standalone python flask app that uses the Qumulo API, CSVs, and SQLite to report on your Qumulo cluster(s) capacity and activity.
 
